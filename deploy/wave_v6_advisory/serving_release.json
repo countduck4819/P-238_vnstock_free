@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "release_id": "wave_v6_long_term_advisory_20260827_calibration11aug",
+  "release_kind": "production_serving_advisory",
+  "created_at_utc": "2026-08-30T16:18:42.249096+00:00",
+  "source_evaluation_report": {
+    "path": "runs/wave_v6_append_only_20260827/F_calibration_window_11aug/calibration_refit_report.json",
+    "sha256": "42d405c3f5e5efcdb6bafba94107b0322eb0c1b849d78a593fde708be6645ce7",
+    "size_bytes": 707
+  },
+  "model_bundle": {
+    "path": "models_wave_v6/evaluation_bundle.joblib",
+    "sha256": "9389b9c712c1c2934692083c03d66f3e122e4f8736e4b6cb3212bf12b0ecb3d1",
+    "size_bytes": 335564
+  },
+  "snapshot_date": "2026-08-27",
+  "as_of_date": "2026-08-27",
+  "prediction_output": {
+    "path": "deploy/wave_v6_advisory/predictions.csv",
+    "sha256": "7ab0fa0b3c7a23f96b4bcf687b2a2fbb82317bc879aab058740f371ed4e2cbb4",
+    "size_bytes": 47799,
+    "rows": 505
+  },
+  "top50_output": {
+    "path": "deploy/wave_v6_advisory/top50.json",
+    "sha256": "40fdf194adb2d0585ab23e496da1230e85951f9ae0c8526f6f2a940fd04fd283",
+    "size_bytes": 6805,
+    "rows": 50
+  },
+  "contract": {
+    "target": "unbounded_early_major_wave_vs_confirmed_structural_breakdown",
+    "fixed_horizon_sessions": null,
+    "probability_field": "long_term_trend_probability",
+    "ranking_field": "long_term_rank",
+    "advisory_only": true,
+    "trade_authorized": false,
+    "independent_from_h120": true,
+    "serving_access": "premium_and_admin"
+  },
+  "limitations": [
+    "The score is a long-term model advisory, not a forecast for a fixed date.",
+    "The release does not authorize trades or combine V6 output with H120 output."
+  ]
+}

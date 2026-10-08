@@ -1,0 +1,30 @@
+experiment_version: wave_cascade_v4_h120_only
+selection_scope: causal_oof_only
+final_test_used_for_selection: false
+
+target:
+  name: y_cont_h120
+  definition: h120_continuation
+  breakdown_policy: offline_risk_audit_only
+
+meta_model:
+  type: logistic_regression
+  c: 1.0
+  positive_class_weight: 1.0
+
+features:
+  probability_columns: [p_h120]
+  continuous_columns: []
+  excluded_heads:
+    p_h20: adverse_oof_ablation
+    p_h60: no_stable_incremental_gain
+    p_v6_trend: no_valid_deployment_artifact_for_original_v6
+
+ranking:
+  mode: universe
+  production_shortlist_k: 10
+  strength_post_ranking_weight: 0.0
+
+promotion:
+  status: research_candidate_requires_new_holdout
+  reason: existing_final_holdout_already_opened

@@ -1,0 +1,20 @@
+{
+  "status": "research_only_paired_classifier_ablation",
+  "champion_p_at_10": 0.2823076923076923,
+  "challenger_p_at_10": 0.28923076923076924,
+  "paired": {
+    "paired_dates": 130,
+    "mean_delta_precision_at_k": 0.006923076923076924,
+    "mean_delta_map_at_k": -0.0015866910866910906,
+    "mean_delta_ndcg_at_k": 0.0056906051907164214,
+    "mean_delta_hit_rate_at_k": 0.03076923076923077,
+    "mean_delta_lift": 0.13264349092660443
+  },
+  "precision_at_10_bootstrap": {
+    "estimate": 0.006923076923076924,
+    "lower": -0.015384615384615385,
+    "upper": 0.030769230769230767,
+    "samples": 2000
+  },
+  "not_trade_authorized": true
+}

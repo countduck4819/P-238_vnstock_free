@@ -1,0 +1,12 @@
+{
+  "total_cases": 20,
+  "average_score": 82.5,
+  "failed_cases": ["missing_003"],
+  "top_issues": ["COMPLETENESS", "SAFETY"],
+  "module_quality": {
+    "question_understanding": 90,
+    "evidence_planning": 86,
+    "reasoning": 84,
+    "risk_review": 78
+  }
+}

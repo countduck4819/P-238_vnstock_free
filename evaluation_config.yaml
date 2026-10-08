@@ -1,0 +1,3 @@
+minimum_average_score: 85
+maximum_regression_drop: 3
+minimum_module_score: 75

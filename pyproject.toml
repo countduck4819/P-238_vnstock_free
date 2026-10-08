@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "p-238"
+version = "0.1.0"
+description = "AI20K Build Phase AI Agent"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "langgraph",
+    "langchain-core",
+    "langchain-openai",
+    "pydantic>=2.0",
+    "pydantic-settings",
+    "python-dotenv",
+    "psycopg[binary]>=3.2,<4",
+    "pandas>=2.0.0",
+    "numpy>=1.26.0",
+    "pyarrow>=15.0.0",
+    "PyYAML>=6.0.0",
+    # Frozen H120 champion calibrator runtime; keep serialization deterministic.
+    "scikit-learn==1.7.0",
+    "xgboost>=3.0.0",
+    "joblib>=1.4.0",
+    "scipy>=1.13.0",
+    "optuna>=4.0.0",
+    "lightgbm>=4.7.0",
+    "catboost>=1.2.7",
+]
+
+[project.optional-dependencies]
+company-knowledge = [
+    "sentence-transformers==6.0.0",
+    "qdrant-client>=1.11,<1.13",
+]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+    "httpx",
+]
+explain = [
+    "shap>=0.46.0",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+
+[project.urls]
+repository = "https://github.com/AI20K-Build-Phase-Cohort-3/P-238"
+

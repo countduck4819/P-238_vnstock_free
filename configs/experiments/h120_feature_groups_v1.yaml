@@ -1,0 +1,22 @@
+feature_group_version: h120_feature_groups_v1
+feature_manifest: data/features/wave_ignition_snapshot/wave_ignition_v2/runs/20260823T050008Z/feature_manifest.json
+feature_root: data/features/wave_ignition_snapshot/wave_ignition_v2/runs/20260823T050008Z/stock_features
+audit:
+  sample_rows_per_year: 20000
+  random_seed: 238
+  constant_std_epsilon: 1.0e-12
+  duplicate_abs_correlation: 0.999
+groups:
+  full_83:
+    policy: all_manifest_features
+  stock_primitives:
+    policy: exclude_date_common_market_sector_and_unverified_corporate_action
+  stock_plus_sector_relative:
+    policy: stock_primitives_plus_sector_relative
+    status: blocked_by_phase_1_4_industry_lineage
+  no_composites:
+    policy: exclude_manifest_composite_scores
+  deduplicated:
+    policy: remove_audited_constant_and_near_duplicate_features
+  market_regime:
+    policy: market_features_for_calibration_or_exposure_only

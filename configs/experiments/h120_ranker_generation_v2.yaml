@@ -1,0 +1,44 @@
+protocol_id: h120_ranker_generation_v2
+status: frozen_for_research_only
+created_at_utc: "2026-08-24T00:00:00Z"
+baseline_lock: experiments/h120_improvement/baseline_lock.json
+feature_contract:
+  resolved_groups: reports/h120_improvement/feature_governance/feature_groups_resolved.json
+  group: stock_primitives
+  expected_feature_count: 50
+  forbidden_lineage:
+    - market_features
+    - sector_features
+    - sector_relative_features
+    - corporate_action_jump
+    - corporate_action_recent
+label_contract:
+  config: configs/wave_continuation_labels_h120_v3_eventweights.yaml
+  label_version: wave_continuation_h120_v3_eventweights
+  target: y_entry_binary
+  strength_target_enabled: false
+  horizon_sessions: 120
+  entry_lag_sessions: 1
+  sampling_stride_sessions: 5
+weight_contract:
+  policy: W0_unit_weight
+  rationale: E02 event-uniqueness confidence interval crossed zero; do not promote W1.
+selection_contract:
+  inner_folds: [fold_2020, fold_2021, fold_2022, fold_2023]
+  prohibited_folds: [fold_2024, final, future_holdout]
+  tuning_seed: 238
+  confirmation_seeds: [238, 239, 240, 241, 242]
+  outer_result_access_for_selection: false
+evaluation_contract:
+  ranking_column: rank_score
+  daily_top_k: 10
+  primary_metric: precision_at_10
+  secondary_metrics: [map_at_10, ndcg_at_10, lift]
+  uncertainty_unit: date
+  paired_bootstrap_samples: 2000
+  promotion_gate:
+    lower_95_ci_delta_precision_at_10: strictly_greater_than_zero
+    worst_fold_lift: at_least_one
+    calibration: separate_non_ranking_gate
+future_holdout_registration: experiments/h120_improvement/E10_future_holdout/registration.json
+trade_authorized: false

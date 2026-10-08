@@ -1,0 +1,11 @@
+{
+  "artifact_id": "xgboost_wave_v1:20260816T063241Z",
+  "artifact_directory": "models/artifacts/xgboost_wave_v1/20260816T063241Z",
+  "payload_sha256": "38f2c71827845e2fc6532de98a429e7e21527e77ece359649063f98d20ab08f7",
+  "model_status": "superseded",
+  "deployment_eligible": false,
+  "frozen_at_utc": "2026-08-16T06:33:45.393564+00:00",
+  "dataset_version": "wave_dataset_v1",
+  "final_test_evaluated": false,
+  "registry_note": "Superseded: OOF backtest revealed validation outcomes crossing the original final-test boundary."
+}

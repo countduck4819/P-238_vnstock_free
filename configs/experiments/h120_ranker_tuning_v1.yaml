@@ -1,0 +1,28 @@
+experiment_generation: h120_ranker_tuning_v1
+status: blocked_until_weight_and_feature_policy_are_locked
+base_model_config: configs/experiments/h120_ranker_stock_primitives_v1.yaml
+feature_group: stock_primitives
+weight_policy_prerequisite: W0_vs_W1_completed
+feature_policy_prerequisite: F0_to_F3_completed
+search:
+  method: random
+  initial_trials: 20
+  random_seed: 238
+  retain_all_trials: true
+  n_estimators_cap: 2000
+parameters:
+  max_depth: [2, 3, 4, 5]
+  min_child_weight: {distribution: log_uniform, low: 10, high: 100}
+  learning_rate: {distribution: uniform, low: 0.02, high: 0.06}
+  subsample: {distribution: uniform, low: 0.6, high: 0.9}
+  colsample_bytree: {distribution: uniform, low: 0.5, high: 0.9}
+  reg_lambda: {distribution: log_uniform, low: 2, high: 20}
+  reg_alpha: {distribution: uniform, low: 0.0, high: 0.5}
+  gamma: {distribution: uniform, low: 0.0, high: 0.5}
+protocol:
+  inner_validation: walk_forward
+  outer_evaluation: walk_forward_only
+  ranking_metrics: [map_at_10, precision_at_10, ndcg_at_10]
+  penalties: [worst_fold_lift_below_gate, average_precision_below_gate, calibration_below_gate]
+  confirmation_seeds: [238, 239, 240, 241, 242]
+  no_search_space_change_after_outer_result: true

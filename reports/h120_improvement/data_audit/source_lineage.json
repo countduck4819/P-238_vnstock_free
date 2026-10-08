@@ -1,0 +1,42 @@
+{
+  "generated_at_utc": "2026-08-24T05:44:08.994109+00:00",
+  "price_adjustment_policy": "adjusted",
+  "missing_session_policy": "audit only; do not impute OHLCV",
+  "sources": {
+    "quality_summary": {
+      "path": "data/processed/wave_ignition_v6_snapshot/audit/quality_summary.json",
+      "sha256": "3024e737d888bbb8df3e6a650a404163f5f5baba646436aba47652920b09a0c3",
+      "bytes": 1142,
+      "modified_at_utc": "2026-08-23T04:59:34.686655+00:00"
+    },
+    "missing_sessions": {
+      "path": "data/processed/wave_ignition_v6_snapshot/audit/missing_sessions.csv",
+      "sha256": "f628352e3d14ea33491e4210c78bca3b7e26ebbcf0ed9c81a31c33b7bd8a1758",
+      "bytes": 55973795,
+      "modified_at_utc": "2026-08-23T04:59:13.853879+00:00"
+    },
+    "industry_map": {
+      "path": "data/processed/wave_ignition_v6_snapshot/industry_map_icb.csv",
+      "sha256": "a0ab567bba95b2e633280cbfd88f263bffe5472b69ee66810bbd0fdb25a3975b",
+      "bytes": 65359,
+      "modified_at_utc": "2026-08-23T04:59:12.907940+00:00"
+    },
+    "feature_manifest": {
+      "path": "data/features/wave_ignition_snapshot/wave_ignition_v2/runs/20260823T050008Z/feature_manifest.json",
+      "sha256": "bae4825acf5d6f4cd14de2aaf626043d5f65c49ba28b9412a8d5186770bec437",
+      "bytes": 4561,
+      "modified_at_utc": "2026-08-23T05:01:28.231555+00:00"
+    },
+    "dataset_manifest": {
+      "path": "data/training/wave_ignition_snapshot/wave_dataset_continuation_h120/runs/20260823T050830Z/dataset_manifest.json",
+      "sha256": "96db0d38003c0d9af696d92357f5fecff0e901baa65bb69924ef6ad90138a9e6",
+      "bytes": 3508,
+      "modified_at_utc": "2026-08-23T05:08:31.772830+00:00"
+    }
+  },
+  "unavailable_external_sources": {
+    "corporate_actions": "No split/dividend/rights point-in-time source is present.",
+    "listing_status": "No historical listing/suspension/delisting source is present.",
+    "industry_history": "The current ICB map has no effective-date history."
+  }
+}

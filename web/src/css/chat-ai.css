@@ -1,0 +1,74 @@
+.ai-answer {
+    font-family: "Inter", sans-serif;
+    line-height: 1.6;
+    font-size: 1rem;
+    color: #1e1e1e;
+}
+
+.ai-answer p {
+    margin: 0.5rem 0;
+}
+
+.ai-answer b {
+    font-weight: 600;
+    color: #111;
+}
+
+.ai-answer i {
+    color: #555;
+}
+
+.ai-answer ul {
+    margin: 0.625rem 0 0.625rem 1.25rem;
+    padding: 0;
+}
+
+.ai-answer li {
+    margin: 0.25rem 0;
+    padding-left: 0.25rem;
+    position: relative;
+}
+
+.ai-answer li::before {
+    content: "•";
+    position: absolute;
+    left: -0.875rem;
+    color: #4169e1;
+    font-size: 1rem;
+}
+
+.ai-answer a {
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ai-answer a:hover {
+    text-decoration: underline;
+}
+
+.ai-answer br {
+    margin-bottom: 0.375rem;
+}
+
+/* Dark Mode Typography */
+.dark .ai-answer {
+    color: #e2e8f0;
+}
+
+.dark .ai-answer b {
+    color: #ffffff;
+}
+
+.dark .ai-answer i {
+    color: #94a3b8;
+}
+
+.dark .ai-answer li::before {
+    color: #818cf8;
+}
+
+.dark .ai-answer a {
+    color: #60a5fa;
+}
+

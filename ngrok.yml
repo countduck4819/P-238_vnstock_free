@@ -1,0 +1,7 @@
+version: "2"
+authtoken: 35Z9xKEpZOLkYeVz0weXaghHzS7_4C4sU6nykkUNLVMPy9kQ2
+tunnels:
+    api:
+        addr: fireant_api:8000
+        proto: http
+        inspect: true

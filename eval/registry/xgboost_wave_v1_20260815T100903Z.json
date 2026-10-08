@@ -1,0 +1,20 @@
+{
+  "artifact_id": "xgboost_wave_v1:20260815T100903Z",
+  "artifact_directory": "models/artifacts/xgboost_wave_v1/20260815T100903Z",
+  "payload_sha256": "c9a16b76f06aeec981ce201e3aa188d60ca78e6441ab0f73d3b6b0bfae8895e9",
+  "model_status": "experimental",
+  "deployment_eligible": false,
+  "frozen_at_utc": "2026-08-15T10:26:16.425360+00:00",
+  "dataset_version": "wave_dataset_v1",
+  "final_test_evaluated": false,
+  "registry_note": "Canonical V1 experimental benchmark; not approved for deployment.",
+  "latest_evaluation": {
+    "evaluation_version": "wave_eval_v1",
+    "evaluation_id": "20260815T103155Z",
+    "split": "oof",
+    "retrained": false,
+    "pre_final_gates_passed": false,
+    "deployment_eligible": false,
+    "final_test_opened": false
+  }
+}

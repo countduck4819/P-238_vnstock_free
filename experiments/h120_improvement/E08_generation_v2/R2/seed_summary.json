@@ -1,0 +1,65 @@
+{
+  "status": "phase_c_r2_complete_research_only",
+  "protocol": {
+    "protocol_id": "h120_ranker_generation_v2",
+    "feature_group": "stock_primitives",
+    "expected_feature_count": 50,
+    "label_version": "wave_continuation_h120_v3_eventweights",
+    "horizon_sessions": 120,
+    "selection_folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ],
+    "prohibited_selection_folds": [
+      "fold_2024",
+      "final",
+      "future_holdout"
+    ],
+    "confirmation_seeds": [
+      238,
+      239,
+      240,
+      241,
+      242
+    ],
+    "trade_authorized": false
+  },
+  "seed_summary": {
+    "seeds": [
+      238,
+      239,
+      240,
+      241,
+      242
+    ],
+    "precision_at_k": {
+      "seed_mean": 0.3730769230769231,
+      "seed_std": 0.005672262001443297,
+      "worst_fold_over_seeds": 0.23846153846153847
+    },
+    "map_at_k": {
+      "seed_mean": 0.2288628663003663,
+      "seed_std": 0.006484661993436203,
+      "worst_fold_over_seeds": 0.10769383394383393
+    },
+    "ndcg_at_k": {
+      "seed_mean": 0.37421520764900457,
+      "seed_std": 0.005838141410243028,
+      "worst_fold_over_seeds": 0.22637241427986987
+    },
+    "lift": {
+      "seed_mean": 3.6064887375413877,
+      "seed_std": 0.12415371540338963,
+      "worst_fold_over_seeds": 1.3417005027252966
+    },
+    "folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ]
+  },
+  "trade_authorized": false
+}

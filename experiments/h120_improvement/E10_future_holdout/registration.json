@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "holdout_id": "h120_ranker_generation_v2_future_holdout",
+  "registered_at_utc": "2026-08-24T00:00:00Z",
+  "protocol": "configs/experiments/h120_ranker_generation_v2.yaml",
+  "start_condition": "first VNINDEX trading session on or after 2026-08-25",
+  "horizon_sessions": 120,
+  "outcome_access": "sealed",
+  "selection_allowed": false,
+  "training_allowed": false,
+  "eligible_candidate_condition": "configuration selected only on fold_2020 through fold_2023 and frozen before this holdout is opened",
+  "evaluation_condition": "open exactly once after all registered dates have mature H120 labels and data-quality grace checks pass",
+  "excluded_from_selection": ["fold_2024", "final", "future_holdout"],
+  "trade_authorized": false,
+  "status": "registered_unopened"
+}

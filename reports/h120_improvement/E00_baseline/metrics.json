@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "surfaces": {
+    "upstream_raw_oof": {
+      "rows": 63438,
+      "scored_rows": 63438,
+      "unresolved_target_rows": 0,
+      "days": 130,
+      "positive_rate": 0.16985087802263626,
+      "roc_auc": 0.6420216291894622,
+      "average_precision": 0.22818809269843007,
+      "brier_score": 0.21462421338374024,
+      "threshold": 0.5,
+      "precision": 0.25567453434884246,
+      "recall": 0.6293271461716937,
+      "f1": 0.3636217390138617,
+      "top_k": {
+        "selected_rows": 1300.0,
+        "selected_days": 130.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.2823076923076923,
+        "base_rate": 0.16985087802263626,
+        "lift": 1.6620914510083884,
+        "selected_resolved_rows": 1300.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "upstream_raw_oof",
+      "probability_column": "p_entry_raw",
+      "daily_top10": {
+        "days": 130.0,
+        "daily_precision_at_10_mean": 0.2823076923076923,
+        "daily_precision_at_10_median": 0.3,
+        "daily_base_rate_mean": 0.17603031453937157,
+        "daily_lift_at_10_mean": 1.9571862389796777,
+        "daily_lift_at_10_min": 0.0
+      }
+    },
+    "upstream_temporal_calibration_audit_fold_2024": {
+      "rows": 13971,
+      "scored_rows": 13971,
+      "unresolved_target_rows": 0,
+      "days": 26,
+      "positive_rate": 0.15539331472335552,
+      "roc_auc": 0.7011073550421971,
+      "average_precision": 0.28709378543627506,
+      "brier_score": 0.12497037869521598,
+      "threshold": 0.1941532852180948,
+      "precision": 0.2652806652806653,
+      "recall": 0.5877475817595578,
+      "f1": 0.36556367282624264,
+      "top_k": {
+        "selected_rows": 260.0,
+        "selected_days": 26.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.4307692307692308,
+        "base_rate": 0.15539331472335552,
+        "lift": 2.772122028133083,
+        "selected_resolved_rows": 260.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "upstream_temporal_calibration_audit_fold_2024",
+      "probability_column": "p_entry_calibrated_temporal",
+      "daily_top10": {
+        "days": 26.0,
+        "daily_precision_at_10_mean": 0.4307692307692308,
+        "daily_precision_at_10_median": 0.4,
+        "daily_base_rate_mean": 0.15612554602011489,
+        "daily_lift_at_10_mean": 2.969051742937877,
+        "daily_lift_at_10_min": 0.8299212598425197
+      }
+    },
+    "cascade_raw_causal_oof": {
+      "rows": 54284,
+      "scored_rows": 54284,
+      "unresolved_target_rows": 0,
+      "days": 103,
+      "positive_rate": 0.16555522805983347,
+      "roc_auc": 0.5908937083397395,
+      "average_precision": 0.19423595910368308,
+      "brier_score": 0.14162817236586606,
+      "threshold": 0.1596653800696767,
+      "precision": 0.20908164906449364,
+      "recall": 0.8679203293646378,
+      "f1": 0.33698399326032014,
+      "top_k": {
+        "selected_rows": 1030.0,
+        "selected_days": 103.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.28640776699029125,
+        "base_rate": 0.16555522805983347,
+        "lift": 1.7299832227997074,
+        "selected_resolved_rows": 1030.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "cascade_raw_causal_oof",
+      "probability_column": "p_cascade",
+      "daily_top10": {
+        "days": 103.0,
+        "daily_precision_at_10_mean": 0.28640776699029125,
+        "daily_precision_at_10_median": 0.3,
+        "daily_base_rate_mean": 0.17185966478065653,
+        "daily_lift_at_10_mean": 2.1188494231759387,
+        "daily_lift_at_10_min": 0.0
+      }
+    },
+    "cascade_temporal_calibrated_oof": {
+      "rows": 43012,
+      "scored_rows": 43012,
+      "unresolved_target_rows": 0,
+      "days": 78,
+      "positive_rate": 0.14477355156700455,
+      "roc_auc": 0.48939329899723527,
+      "average_precision": 0.1423619833135689,
+      "brier_score": 0.15382427824734185,
+      "threshold": 0.07367100008937566,
+      "precision": 0.1617087604353799,
+      "recall": 0.982977356672555,
+      "f1": 0.2777286236076136,
+      "top_k": {
+        "selected_rows": 780.0,
+        "selected_days": 78.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.2564102564102564,
+        "base_rate": 0.14477355156700455,
+        "lift": 1.771112566037891,
+        "selected_resolved_rows": 780.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "cascade_temporal_calibrated_oof",
+      "probability_column": "p_cascade_calibrated",
+      "daily_top10": {
+        "days": 78.0,
+        "daily_precision_at_10_mean": 0.2564102564102564,
+        "daily_precision_at_10_median": 0.25,
+        "daily_base_rate_mean": 0.15000837076404336,
+        "daily_lift_at_10_mean": 2.2803328792356052,
+        "daily_lift_at_10_min": 0.0
+      }
+    }
+  }
+}

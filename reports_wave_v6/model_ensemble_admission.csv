@@ -1,0 +1,4 @@
+model,calibration_roc_auc,calibration_pr_lift,calibration_lift_at_50,walk_forward_pr_lift_mean,walk_forward_lift_at_50_mean,walk_forward_stable_signal,passed_all_gates,active_for_weight_search,fallback_best_model,ensemble_weight
+xgb,0.7637284997819679,1.7631675983337627,1.5437722261333302,1.4358565330616038,1.4158290748272826,True,True,True,False,0.55
+lgb,0.7764212226909931,1.7547900682186195,1.5520736213592523,1.494015444608651,1.3898625749692972,True,True,True,False,0.0
+cat,0.7757303043760029,1.7569182035235629,1.4909815883446678,1.4641346219846156,1.3031094308339135,True,True,True,False,0.45

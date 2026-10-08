@@ -1,0 +1,16 @@
+{
+  "status": "selection_evidence_complete_review_required",
+  "protocol": "configs/experiments/h120_ranker_generation_v2.yaml",
+  "dataset_run": "data/training/wave_ignition_snapshot/wave_dataset_continuation_h120_v3/runs/20260824T114000Z",
+  "selected_trial": 14,
+  "candidate_config": "configs/experiments/h120_ranker_generation_v2_r3_trial14_candidate.yaml",
+  "evidence": {
+    "r2_seed_summary": "experiments/h120_improvement/E08_generation_v2/R2/seed_summary.json",
+    "r3_summary": "experiments/h120_improvement/E08_generation_v2/R3/summary.json",
+    "candidate_evaluation": "experiments/h120_improvement/E08_generation_v2/R3_trial14_candidate/evaluation/metrics.json",
+    "calibration": "experiments/h120_improvement/E06_generation_v2/manifest.json"
+  },
+  "phase_e_authorized": false,
+  "reason": "A human must freeze the candidate configuration after reviewing Phase-C and calibration evidence. No refit, shadow deployment, or trade authorization is implied.",
+  "trade_authorized": false
+}

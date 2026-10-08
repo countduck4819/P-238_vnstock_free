@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/bin/bash -lc 'cd /home/tts/P-238 && git status 2>&1 | head -20')",
+      "Bash(/bin/bash -lc 'cd /home/tts/P-238 && ls -la .git/ 2>&1 | head -30')",
+      "Bash(/bin/bash -lc 'git config --global --list 2>&1; echo \"---GLOBAL ABOVE---\"; git config --list --show-origin 2>&1 | head -40; echo \"---ALL ABOVE---\"')",
+      "Bash(/bin/bash -lc 'env | grep -i git 2>&1; echo \"---GIT ENV ABOVE---\"; echo \"HOME=$HOME\"; echo \"PWD=$PWD\"; ls -la /home/tts/ 2>&1 | head; echo \"---HOME DIR ABOVE---\"')",
+      "Bash(/bin/bash -lc 'grep -iE \"git (push|clone|pull|remote)\" /home/tts/.bash_history 2>&1 | tail -30; echo \"---GIT HISTORY ABOVE---\"')",
+      "Bash(/bin/bash -lc 'grep -iE \"github\" /home/tts/.bash_history 2>&1 | tail -30; echo \"---GITHUB HISTORY ABOVE---\"')",
+      "Bash(/bin/bash -lc 'cat /home/tts/.gitconfig 2>&1; echo \"---GITCONFIG ABOVE---\"; cat ~/.git-credentials 2>&1; echo \"---CREDENTIALS ABOVE---\"; git config --global --get credential.helper 2>&1; echo \"---HELPER ABOVE---\"')",
+      "Bash(/bin/bash -lc \"grep -iE \\\"github\\\\.com\\\" /home/tts/.bash_history 2>&1 | tail -20; echo \\\"---GITHUB URL HISTORY ABOVE---\\\"; echo \\\"===\\\"; grep -iE \\\"git (push|clone|remote set)\\\" /home/tts/.bash_history 2>&1 | grep -i github; echo \\\"---GITHUB GIT CMDS ABOVE---\\\"\")",
+      "Bash(/bin/bash -lc 'ls -la /home/tts/.ssh/ 2>&1; echo \"---SSH KEYS ABOVE---\"; echo \"===\"; which git-credential-manager git-credential-osxkeychain 2>&1; echo \"---CRED HELPER BINS ABOVE---\"; echo \"===\"; git config --global --get credential.helper 2>&1; echo \"(no output = no helper)\"; echo \"---HELPER ABOVE---\"')",
+      "Bash(/bin/bash -lc 'echo \"=== known_hosts ===\"; cat /home/tts/.ssh/known_hosts 2>&1; echo \"\"; echo \"=== public key ===\"; cat /home/tts/.ssh/id_ed25519.pub 2>&1; echo \"\"; echo \"=== first line of private key (header only, not secret) ===\"; head -1 /home/tts/.ssh/id_ed25519 2>&1')",
+      "Bash(/bin/bash -lc \"echo \\\"=== Test 1: key co bi ma hoa (passphrase) khong? ===\\\"; ssh-keygen -y -f /home/tts/.ssh/id_ed25519 -P '' >/dev/null 2>/tmp/err; if [ -s /tmp/err ] && grep -qi \\\"incorrect\\\\|load failed\\\\|passphrase\\\" /tmp/err; then echo \\\"KEY CO PASSPHRASE (bi ma hoa)\\\"; cat /tmp/err; else echo \\\"KEY KHONG CO PASSPHRASE (khong ma hoa)\\\"; fi\necho \\\"\\\"\necho \\\"=== Test 2: ket noi SSH toi GitHub (BatchMode = khong hoi password) ===\\\"\nssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -T git@github.com 2>&1 | head -5\necho \\\"EXIT_CODE=\"'$?\"')",
+      "Bash(/bin/bash -lc 'rm -f /home/tts/.ssh/id_ed25519 /home/tts/.ssh/id_ed25519.pub && echo \"DA XOA KEY\" && ls -la /home/tts/.ssh/')",
+      "Bash(/bin/bash -lc 'cd /home/tts/P-238 && rm -rf .git && git init 2>&1 && echo \"---INIT OK---\" && git status 2>&1 | head -5')",
+      "Bash(/bin/bash -lc 'cd /home/tts/P-238 && git status 2>&1 | head -15; echo \"---STATUS ABOVE---\"; echo \"===\"; git remote -v 2>&1; echo \"---REMOTE ABOVE---\"; echo \"===\"; git log --oneline -5 2>&1; echo \"---LOG ABOVE---\"')"
+    ]
+  }
+}

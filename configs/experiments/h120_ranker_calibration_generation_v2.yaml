@@ -1,0 +1,34 @@
+experiment_generation: h120_ranker_generation_v2
+protocol: configs/experiments/h120_ranker_generation_v2.yaml
+status: frozen_for_research_only
+ranking_contract:
+  ranking_column: rank_score
+  ranking_policy: rank_score_only
+  probability_use: risk_monitoring_exposure_only
+  top_k: 10
+input_contract:
+  score_probability_column: p_rank_raw
+  target_column: y_entry
+  weight_column: sample_weight
+  fold_column: fold_id
+  regime_column: market_regime_score
+calibration_candidates:
+  C0:
+    method: static_platt
+    output_column: p_h120_c0_static
+  C1:
+    method: rolling_platt
+    output_column: p_h120_c1_rolling
+    rolling_prior_folds: 2
+  C2:
+    method: regime_intercept
+    output_column: p_h120_c2_regime
+evaluation:
+  ece_bins: 10
+  clip_epsilon: 0.000001
+  random_seed: 238
+  gates:
+    ranking_order_changed: fail
+    probability_metric: [brier_score, log_loss, ece, calibration_slope, calibration_intercept]
+    selection_policy: calibration_only_no_ranking_credit
+trade_authorized: false

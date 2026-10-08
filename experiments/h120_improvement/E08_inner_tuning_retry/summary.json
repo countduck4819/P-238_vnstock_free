@@ -1,0 +1,58 @@
+{
+  "status": "research_only_inner_search_not_outer_evaluation",
+  "precondition_override": "blocked_until_weight_and_feature_policy_are_locked",
+  "trials_requested": 4,
+  "trials_completed": 4,
+  "folds": [
+    "fold_2021",
+    "fold_2022",
+    "fold_2023",
+    "fold_2024"
+  ],
+  "best_trial": {
+    "trial_id": 1,
+    "parameters": {
+      "max_depth": 3,
+      "min_child_weight": 50.12498701693138,
+      "learning_rate": 0.03737271749314604,
+      "subsample": 0.7221371111232889,
+      "colsample_bytree": 0.6131681946590702,
+      "reg_lambda": 19.81650219201129,
+      "reg_alpha": 0.3804298359435866,
+      "gamma": 0.4546194789007969
+    },
+    "folds": [
+      "fold_2021",
+      "fold_2022",
+      "fold_2023",
+      "fold_2024"
+    ],
+    "status": "completed",
+    "fold_metrics": {
+      "fold_2021": {
+        "precision_at_10": 0.472,
+        "map_at_10": 0.33936349206349214,
+        "ndcg_at_10": 0.47061113899739276
+      },
+      "fold_2022": {
+        "precision_at_10": 0.5115384615384615,
+        "map_at_10": 0.3498992673992674,
+        "ndcg_at_10": 0.5246653962591719
+      },
+      "fold_2023": {
+        "precision_at_10": 0.2923076923076923,
+        "map_at_10": 0.12531746031746033,
+        "ndcg_at_10": 0.2645790625670649
+      },
+      "fold_2024": {
+        "precision_at_10": 0.48076923076923084,
+        "map_at_10": 0.3342979242979242,
+        "ndcg_at_10": 0.5041836898084493
+      }
+    },
+    "mean_precision_at_10": 0.4391538461538462,
+    "worst_fold_precision_at_10": 0.2923076923076923,
+    "mean_ranking_objective": 1.1673832040814018
+  },
+  "not_trade_authorized": true
+}

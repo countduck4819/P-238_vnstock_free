@@ -1,0 +1,244 @@
+# ==========================
+# GLOBAL
+# ==========================
+
+# Environment variables
+.env
+.env.*
+*.env.local
+*.env.development
+*.env.production
+
+# Environment templates are safe and should remain version-controlled.
+!.env.example
+!**/.env.example
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (never commit large data)
+models/
+eval/runs/
+models_wave_v6/
+predictions/
+!predict_xgboost_and_lstm/
+!predict_xgboost_and_lstm/**
+runs/wave_h120_shadow/
+*.db
+*.sqlite3
+
+# Local/generated ML artifacts and experiment outputs
+catboost_info/
+experiments/feature_ablation/
+experiments/multihorizon_v7/
+experiments/strength_ablation/
+experiments/baselines/wave_p0_current_lock.json
+
+# V6 report exports: keep summaries/metrics, ignore bulky regenerated tables.
+reports_wave_v6/*
+!reports_wave_v6/data_quality_summary.json
+!reports_wave_v6/evaluation_report.json
+!reports_wave_v6/feature_importance_aligned.csv
+!reports_wave_v6/feature_importance_stability_walk_forward.csv
+!reports_wave_v6/feature_quality.csv
+!reports_wave_v6/label_balance_by_year.csv
+!reports_wave_v6/liquidity_feature_summary.csv
+!reports_wave_v6/model_ensemble_admission.csv
+!reports_wave_v6/model_metrics_calibration.csv
+!reports_wave_v6/model_metrics_final_holdout.csv
+!reports_wave_v6/model_metrics_walk_forward_summary.csv
+!reports_wave_v6/prediction_correlation_final_holdout.csv
+!reports_wave_v6/probability_reliability_calibration.csv
+!reports_wave_v6/probability_reliability_final_holdout.csv
+!reports_wave_v6/selected_features.csv
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Cache / Temp
+.cache/
+.tmp/
+*.pid
+*.seed
+*.bak
+*.tsbuildinfo
+.hypothesis/
+.tox/
+.nox/
+.ipynb_checkpoints/
+
+# Test / Coverage
+coverage/
+htmlcov/
+.coverage
+coverage.xml
+.pytest_cache/
+.ruff_cache/
+
+
+# ==========================
+# PYTHON
+# ==========================
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+.venv-*/
+env/
+
+# Python build
+dist/
+build/
+
+
+# ==========================
+# NODE / NESTJS / NEXTJS
+# ==========================
+node_modules/
+.next/
+.nuxt/
+out/
+
+# NestJS API
+api/dist/
+
+# NextJS Web
+web/lib/
+web/next-env.d.ts
+web/public/lg-*
+web/public/*.webp
+web/public/file.svg
+
+
+# ==========================
+# DATA / DATABASE
+# ==========================
+
+# Ignore exported/raw data by default; only the small canonical lookup files
+# listed below are tracked.
+data/*
+!data/industries_for_code.json
+!data/listing.json
+!data/stocks_symbols.json
+!data/industries.json
+!data/stocks_by_industries.json
+!data/vnindex.json
+
+# Raw vnstock snapshots, probes, caches and training data are never committed.
+data/vnstock/
+
+# Database
+db/
+*.db
+*.sqlite
+*.sqlite3
+
+
+# ==========================
+# AI LOGS
+# ==========================
+.ai-log/*.jsonl
+.ai-log/archive/
+
+
+# ==========================
+# DOCKER
+# ==========================
+docker-compose.override.yml
+
+
+# ==========================
+# DAILY SCORING / LSTM GENERATED ARTIFACTS
+# ==========================
+
+# Dated run directories contain snapshots, logs, predictions and temporary
+# manifests. Release contracts under deploy/ remain intentionally trackable.
+runs/
+
+# Provider caches and locally materialized OHLCV snapshots.
+data_vnstock/
+
+# Training-generated universe/configuration and notebook replay outputs.
+configs/price_forecast_v6_coverage.json
+reports/price_forecast_lstm/
+
+# Model binaries/scalers are large and must be promoted through artifact
+# storage; the serving manifests and scripts remain version-controlled.
+*.keras
+*.h5
+*.joblib
+*.pkl
+
+
+# ==========================
+# FINSIGHT CHATBOT LOCAL ARTIFACTS
+# ==========================
+
+# Temporary Python environments/caches created during local validation.
+.tmp-venv/
+pytest-cache-files-*/
+
+# Local FastAPI/Python service output.
+python_data/server_stdout.log
+python_data/server_stderr.log
+
+# Generated OCR, normalization and retrieval artifacts. Source code and SQL
+# migrations under financial_ocr_mvp remain trackable.
+financial_ocr_mvp/output/
+
+# Local vector/database storage and portable backups belong in artifact
+# storage, not Git.
+qdrant_storage/
+qdrant_data/
+postgres_data/
+redis_data/
+minio_data/
+*.dump
+*.backup
+*.sql.gz
+*.snapshot
+
+# Local credentials and certificates.
+.secrets/
+secrets/
+*.pem
+*.p12
+*.pfx
+
+# Locally downloaded embedding/model weights.
+*.safetensors
+*.onnx
+*.pth
+*.pt
+
+# Accidental local inspection/editor output.
+tree_output.txt
+*wq*wq
+
+# ADLC local state — sinh lại được bằng `adlc setup` / `adlc upgrade`.
+# Xoá dòng bên dưới nếu team muốn track; giữ lại hai dòng comment này thì ADLC không thêm lại.
+.agents/
+.graph-out/
+.graphify-out/

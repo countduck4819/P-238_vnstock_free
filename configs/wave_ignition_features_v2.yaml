@@ -1,0 +1,39 @@
+feature_version: wave_ignition_v2
+decision_time: after_market_close
+execution_time: next_session_open
+
+industry_level: 2
+minimum_sector_members: 5
+annualization_factor: 252
+
+windows: [5, 20, 60, 120]
+
+# Source convention was verified against the downloaded/tested symbol sample.
+# Keep the provider limitation explicit: this is adjusted by verified behavior,
+# not a provider-supplied is_adjusted/adjustment_factor flag.
+price_adjustment_policy: adjusted
+
+minimum_coverage:
+  5: 1.0
+  20: 0.95
+  60: 0.95
+  120: 0.92
+
+quality_gates:
+  enabled: true
+  min_coverage_60: 0.95
+  min_coverage_120: 0.92
+  max_zero_volume_ratio_60: 0.05
+  max_stale_sessions: 1
+  corporate_action_jump: 0.30
+  corporate_action_cooldown: 120
+
+missing_policy:
+  price: no_fill
+  volume: no_fill
+  insufficient_history: preserve_nan
+
+normalization:
+  zscore_window: 252
+  zscore_min_periods: 126
+  zscore_clip: 3.0

@@ -1,0 +1,69 @@
+{
+  "status": "research_only_calibration_comparison",
+  "protocol": {
+    "protocol_id": "h120_ranker_generation_v2",
+    "feature_group": "stock_primitives",
+    "expected_feature_count": 50,
+    "label_version": "wave_continuation_h120_v3_eventweights",
+    "horizon_sessions": 120,
+    "selection_folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ],
+    "prohibited_selection_folds": [
+      "fold_2024",
+      "final",
+      "future_holdout"
+    ],
+    "confirmation_seeds": [
+      238,
+      239,
+      240,
+      241,
+      242
+    ],
+    "trade_authorized": false
+  },
+  "ranking_contract": {
+    "ranking_column": "rank_score",
+    "ranking_policy": "rank_score_only",
+    "probability_use": "risk_monitoring_exposure_only",
+    "top_k": 10
+  },
+  "ranker_oof": "models\\wave_ignition\\h120_ranker_generation_v2\\R3_trial14_candidate\\runs\\20260824T114444Z\\predictions\\oof_ranker_predictions.parquet",
+  "candidates": {
+    "C0": {
+      "method": "static_platt",
+      "output_column": "p_h120_c0_static",
+      "evaluated_folds": 3,
+      "mean_brier_score": 0.16406557373259043,
+      "mean_log_loss": 0.7017898876971337,
+      "mean_ece": 0.15977921921067773,
+      "mean_calibration_slope": 5.765521075511894,
+      "mean_calibration_intercept": 4.888057606182117
+    },
+    "C1": {
+      "method": "rolling_platt",
+      "output_column": "p_h120_c1_rolling",
+      "evaluated_folds": 3,
+      "mean_brier_score": 0.16496218147470235,
+      "mean_log_loss": 0.7053874923429367,
+      "mean_ece": 0.16496978059707265,
+      "mean_calibration_slope": 5.68463473326245,
+      "mean_calibration_intercept": 4.725208287047994
+    },
+    "C2": {
+      "method": "regime_intercept",
+      "output_column": "p_h120_c2_regime",
+      "evaluated_folds": 3,
+      "mean_brier_score": 0.1621011434658202,
+      "mean_log_loss": 0.6917614174297024,
+      "mean_ece": 0.14654217657231075,
+      "mean_calibration_slope": 3.554153288191548,
+      "mean_calibration_intercept": 2.5989283166115285
+    }
+  },
+  "trade_authorized": false
+}

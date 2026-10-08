@@ -1,0 +1,11 @@
+{
+  "label_version": "wave_continuation_h120_v3_eventweights",
+  "labeled_rows": 165875,
+  "positive_rate": 0.13669329314242654,
+  "floor_8pct_rate": 0.25712735493594574,
+  "volatility_scaled_rate": 0.7428726450640543,
+  "hurdle_market_regime_spearman": -0.18910497299036327,
+  "hurdle_market_regime_mutual_information": 0.10561551666101643,
+  "policy": "diagnostic_only_canonical_h120_label_unchanged",
+  "not_trade_authorized": true
+}

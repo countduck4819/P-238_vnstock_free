@@ -1,0 +1,53 @@
+# Two-stage trend experiment: p_trend (H20 binary) then conditional strength.
+# This isolates the target-horizon change from the unproven v5 feature reduction.
+model_version: xgboost_wave_v6_trend20
+random_seed: 238
+n_jobs: -1
+
+classifier:
+  objective: binary:logistic
+  eval_metric: aucpr
+  tree_method: hist
+  n_estimators: 2000
+  learning_rate: 0.03
+  max_depth: 5
+  min_child_weight: 10.0
+  subsample: 0.8
+  colsample_bytree: 0.8
+  gamma: 0.0
+  reg_alpha: 0.1
+  reg_lambda: 2.0
+  max_bin: 256
+  early_stopping_rounds: 100
+
+strength_regressor:
+  objective: reg:pseudohubererror
+  eval_metric: mae
+  tree_method: hist
+  n_estimators: 1500
+  learning_rate: 0.03
+  max_depth: 4
+  min_child_weight: 5.0
+  subsample: 0.8
+  colsample_bytree: 0.8
+  gamma: 0.0
+  reg_alpha: 0.1
+  reg_lambda: 2.0
+  max_bin: 256
+  early_stopping_rounds: 100
+
+calibration:
+  method: sigmoid
+  clip_epsilon: 0.000001
+
+decision:
+  threshold_metric: f1
+  threshold_grid_size: 401
+  precision_at_fraction: 0.05
+
+training_policy:
+  class_weight: weighted_negative_over_positive_per_fold
+  base_weight_column: sample_weight
+  strength_positive_rows_only: true
+  final_rounds: median_best_iteration
+  final_test_requires_explicit_flag: true

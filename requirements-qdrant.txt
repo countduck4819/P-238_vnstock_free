@@ -1,0 +1,3 @@
+# Company Knowledge Qdrant MVP (dense local embeddings only)
+sentence-transformers==6.0.0
+qdrant-client>=1.11,<1.13

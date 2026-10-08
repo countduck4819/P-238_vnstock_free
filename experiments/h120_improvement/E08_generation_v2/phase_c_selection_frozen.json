@@ -1,0 +1,15 @@
+{
+  "status": "configuration_frozen_research_eligible",
+  "protocol": "configs/experiments/h120_ranker_generation_v2.yaml",
+  "dataset_run": "data/training/wave_ignition_snapshot/wave_dataset_continuation_h120_v3/runs/20260824T114000Z",
+  "frozen_config": "configs/experiments/h120_ranker_generation_v2_r3_trial14_candidate.yaml",
+  "frozen_config_sha256": "0D4F67B3459E4ABFE2071581243469DFE75DACFF77D27E7A1133D13588D34C50",
+  "final_n_estimators": 110,
+  "selection_evidence": "experiments/h120_improvement/E08_generation_v2/R3_trial14_candidate/seed_confirmation.json",
+  "selection_evidence_sha256": "89E41B96253BB8211781349D2A7167CDDAB79BD1014F2373182263D4DEE3FE8A",
+  "selection_scope": ["fold_2020", "fold_2021", "fold_2022", "fold_2023"],
+  "excluded_from_selection": ["fold_2024", "final", "future_holdout"],
+  "decision": "Freeze trial-14 ranker for research-only refit and shadow preparation. Calibration remains unvalidated and cannot affect rank_score ordering.",
+  "production_promotion": false,
+  "trade_authorized": false
+}

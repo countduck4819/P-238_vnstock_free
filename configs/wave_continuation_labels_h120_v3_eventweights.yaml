@@ -1,0 +1,17 @@
+label_version: wave_continuation_h120_v3_eventweights
+horizon: 120
+entry_lag: 1
+volatility_lookback: 20
+annualization_factor: 252
+
+continuation_target:
+  return_type: simple
+  excess_volatility_multiplier: 0.50
+  minimum_excess_return: 0.08
+  minimum_terminal_return: 0.00
+  maximum_drawdown: -0.20
+
+data_quality:
+  minimum_future_coverage: 0.90
+  minimum_volatility_observations: 16
+  sampling_stride: 5

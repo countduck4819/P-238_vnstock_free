@@ -1,0 +1,16 @@
+{
+    "schema_version": 1,
+    "release_id": "price_forecast_lstm_local_20260827",
+    "release_kind": "price_forecast_lstm_prediction_pointer",
+    "as_of_date": "2026-08-27",
+    "snapshot_date": "2026-08-27",
+    "updated_at_utc": "2026-08-31T11:55:00Z",
+    "source_release": "deploy/price_forecast_lstm/serving_release.json",
+    "prediction_output": {
+        "path": "deploy/price_forecast_lstm/price_predictions.json",
+        "sha256": "b3f4680f3f96f61e6a79e989617e29bc8cf07236be29f7f9ce800bf143a47c2b",
+        "size_bytes": 480618,
+        "rows": 50
+    },
+    "trade_authorized": false
+}

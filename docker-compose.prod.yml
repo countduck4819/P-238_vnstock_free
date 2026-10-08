@@ -1,0 +1,136 @@
+services:
+    db:
+        container_name: fireant_db
+        image: postgres:16
+        environment:
+            - POSTGRES_USER=countduck
+            - POSTGRES_PASSWORD=countduck
+            - POSTGRES_DB=fireant_stock
+        ports:
+            - "127.0.0.1:5000:5432"
+        volumes:
+            - ./db:/var/lib/postgresql/data
+
+    api:
+        container_name: fireant_api
+        image: node:22.9.0
+        working_dir: /app/api
+        volumes:
+            - ./api:/app/api
+            - ./data:/app/data
+            - ./predict_xgboost_and_lstm:/app/predict_xgboost_and_lstm
+            - ./runs:/app/runs:ro
+            - ./deploy:/app/deploy:ro
+        ports:
+            - "127.0.0.1:8000:8000"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        depends_on:
+            db:
+                condition: service_started
+            finsight_api:
+                condition: service_started
+        command: ["npm", "run", "start:dev"]
+        env_file:
+            - .env
+        environment:
+            - PYTHON_API=http://host.docker.internal:6060/api
+            - PYTHON_API_URL=http://host.docker.internal:6060/api
+            - FINSIGHT_API_URL=http://finsight_api:6071
+            - FINSIGHT_API_TIMEOUT_MS=120000
+            - PGHOST=db
+            - PGPORT=5432
+            - DATABASE_URL=postgresql://countduck:countduck@db:5432/fireant_stock
+            - FINANCIAL_DATABASE_URL=postgresql://countduck:countduck@db:5432/fireant_stock
+            - LSTM_PRICE_RELEASE_POINTER_PATH=/app/deploy/price_forecast_lstm/daily_release.json
+
+    web:
+        container_name: fireant_web
+        image: node:22.9.0
+        working_dir: /app/web
+        volumes:
+            - ./web:/app/web
+        ports:
+            - "127.0.0.1:3000:3000"
+        command: ["sh", "-c", "npm run build && npm run start"]
+        depends_on:
+            - api
+        env_file:
+            - .env
+        environment:
+            - NEXT_PUBLIC_SHORT_TERM_ENABLED=true
+            - NEXT_PUBLIC_LONG_TERM_ENABLED=true
+            - NEXT_PUBLIC_V6_ENABLED=true
+            - INTERNAL_API_BASE_URL=http://api:8000/api
+
+    ngrok:
+        container_name: fireant_ngrok
+        image: ngrok/ngrok:latest
+        restart: unless-stopped
+        command:
+            - "start"
+            - "--all"
+            - "--config"
+            - "/etc/ngrok.yml"
+        volumes:
+            - ./ngrok.yml:/etc/ngrok.yml
+        ports:
+            - "127.0.0.1:4040:4040"
+        depends_on:
+            - api
+
+    finsight_api:
+        container_name: finsight_api
+        build:
+            context: .
+            dockerfile: Dockerfile.finsight
+        working_dir: /app
+        restart: unless-stopped
+        env_file:
+            - .env
+        environment:
+            - FINANCIAL_DATABASE_URL=postgresql://countduck:countduck@db:5432/fireant_stock
+            - QDRANT_URL=${QDRANT_URL}
+            - QDRANT_API_KEY=${QDRANT_API_KEY}
+        ports:
+            - "127.0.0.1:6071:6071"
+        depends_on:
+            db:
+                condition: service_started
+        volumes:
+            - finsight_hf_cache:/root/.cache/huggingface
+
+    model_scoring:
+        container_name: fireant_model_scoring
+        build:
+            context: .
+            dockerfile: deploy/daily_scoring/Dockerfile
+        working_dir: /app
+        restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - ./data:/app/data
+            - ./data_vnstock:/app/data_vnstock
+            - ./runs:/app/runs
+            - ./deploy:/app/deploy:ro
+            - ./models:/app/models:ro
+            - ./experiments:/app/experiments:ro
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - WAVE_DAILY_SCORING_TIME=${WAVE_DAILY_SCORING_TIME:-19:00}
+            - WAVE_DAILY_SCORING_RUN_ON_START=${WAVE_DAILY_SCORING_RUN_ON_START:-true}
+            - WAVE_DAILY_SCORING_MAX_ATTEMPTS=${WAVE_DAILY_SCORING_MAX_ATTEMPTS:-8}
+            - WAVE_DAILY_SCORING_RETRY_MINUTES=${WAVE_DAILY_SCORING_RETRY_MINUTES:-30}
+            - WAVE_H120_REQUESTS_PER_MINUTE=${WAVE_H120_REQUESTS_PER_MINUTE:-25}
+            - WAVE_HISTORY_SESSIONS=${WAVE_HISTORY_SESSIONS:-480}
+            - WAVE_H120_UNIVERSE_SYMBOLS=/app/deploy/wave_h120_shadow/universe_symbols.csv
+            - WAVE_H120_MAX_STALENESS_DAYS=${WAVE_H120_MAX_STALENESS_DAYS:-0}
+            - WAVE_DAILY_KEEP_SUCCESS_RUNS=${WAVE_DAILY_KEEP_SUCCESS_RUNS:-14}
+            - WAVE_DAILY_FAILED_RETENTION_DAYS=${WAVE_DAILY_FAILED_RETENTION_DAYS:-3}
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+
+volumes:
+    finsight_hf_cache:

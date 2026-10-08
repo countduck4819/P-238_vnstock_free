@@ -1,0 +1,32 @@
+model_version: h120_ranker_stock_primitives_e08_outer2024_v1
+random_seed: 238
+n_jobs: -1
+feature_group_version: h120_feature_groups_v1
+feature_group: stock_primitives
+selection_protocol:
+  experiment_id: E08
+  selection_artifact: experiments/h120_improvement/E08_inner_tuning_outer2024/summary.json
+  inner_folds: [fold_2020, fold_2021, fold_2022, fold_2023]
+  outer_fold: fold_2024
+  outer_fold_used_for_selection: false
+  status: frozen_before_outer_evaluation
+ranking_contract:
+  ranking_output: rank_score
+  probability_output: p_h120_calibrated
+  ranking_policy: rank_score_only
+  probability_policy: causal_platt_after_rank_score
+ranker:
+  objective: rank:pairwise
+  eval_metric: [map@10, ndcg@10]
+  tree_method: hist
+  n_estimators: 2000
+  learning_rate: 0.03737271749314604
+  max_depth: 3
+  min_child_weight: 50.12498701693138
+  subsample: 0.7221371111232889
+  colsample_bytree: 0.6131681946590702
+  gamma: 0.4546194789007969
+  reg_alpha: 0.3804298359435866
+  reg_lambda: 19.81650219201129
+  max_bin: 256
+  early_stopping_rounds: 100

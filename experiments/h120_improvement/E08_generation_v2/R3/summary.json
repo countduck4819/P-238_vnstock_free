@@ -1,0 +1,84 @@
+{
+  "status": "research_only_inner_search_not_outer_evaluation",
+  "protocol_status": "frozen_for_research_only",
+  "protocol": {
+    "protocol_id": "h120_ranker_generation_v2",
+    "feature_group": "stock_primitives",
+    "expected_feature_count": 50,
+    "label_version": "wave_continuation_h120_v3_eventweights",
+    "horizon_sessions": 120,
+    "selection_folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ],
+    "prohibited_selection_folds": [
+      "fold_2024",
+      "final",
+      "future_holdout"
+    ],
+    "confirmation_seeds": [
+      238,
+      239,
+      240,
+      241,
+      242
+    ],
+    "trade_authorized": false
+  },
+  "trials_requested": 20,
+  "trials_completed": 20,
+  "folds": [
+    "fold_2020",
+    "fold_2021",
+    "fold_2022",
+    "fold_2023"
+  ],
+  "best_trial": {
+    "trial_id": 14,
+    "parameters": {
+      "max_depth": 3,
+      "min_child_weight": 13.109618164996958,
+      "learning_rate": 0.04224854046417745,
+      "subsample": 0.8789880623894869,
+      "colsample_bytree": 0.6106978324634057,
+      "reg_lambda": 14.016089740665802,
+      "reg_alpha": 0.08813054502646617,
+      "gamma": 0.376522791916116
+    },
+    "folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ],
+    "status": "completed",
+    "fold_metrics": {
+      "fold_2020": {
+        "precision_at_10": 0.28888888888888886,
+        "map_at_10": 0.12650646678424454,
+        "ndcg_at_10": 0.2544074657202795
+      },
+      "fold_2021": {
+        "precision_at_10": 0.452,
+        "map_at_10": 0.3137333333333333,
+        "ndcg_at_10": 0.4563126779353253
+      },
+      "fold_2022": {
+        "precision_at_10": 0.5230769230769231,
+        "map_at_10": 0.4208470695970695,
+        "ndcg_at_10": 0.5761476909764265
+      },
+      "fold_2023": {
+        "precision_at_10": 0.31153846153846154,
+        "map_at_10": 0.12931166056166055,
+        "ndcg_at_10": 0.2756450468085081
+      }
+    },
+    "mean_precision_at_10": 0.3938760683760684,
+    "worst_fold_precision_at_10": 0.28888888888888886,
+    "mean_ranking_objective": 1.0321039213052803
+  },
+  "not_trade_authorized": true
+}

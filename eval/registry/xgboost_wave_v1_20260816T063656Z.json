@@ -1,0 +1,11 @@
+{
+  "artifact_id": "xgboost_wave_v1:20260816T063656Z",
+  "artifact_directory": "models/artifacts/xgboost_wave_v1/20260816T063656Z",
+  "payload_sha256": "981212b6e92a68662739789a5a4088c56767c9ddb65966254d484c57af5b90f4",
+  "model_status": "superseded",
+  "deployment_eligible": false,
+  "frozen_at_utc": "2026-08-16T06:37:56.317577+00:00",
+  "dataset_version": "wave_dataset_v1",
+  "final_test_evaluated": false,
+  "registry_note": "Superseded: January 2025 was touched while checking the OOF backtest exit boundary."
+}

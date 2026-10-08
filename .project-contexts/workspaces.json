@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "workspaces": [
+    {"id": "api", "root": "api", "kind": "node"},
+    {"id": "financial_ocr_mvp", "root": "financial_ocr_mvp", "kind": "python"},
+    {"id": "python_data", "root": "python_data", "kind": "python"},
+    {"id": "web", "root": "web", "kind": "node"}
+  ]
+}

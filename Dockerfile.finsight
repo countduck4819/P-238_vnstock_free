@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    HF_HOME=/root/.cache/huggingface
+
+COPY requirements.txt requirements-qdrant.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-qdrant.txt
+
+COPY src ./src
+COPY data/vnstock/metadata ./data/vnstock/metadata
+
+EXPOSE 6071
+CMD ["uvicorn", "src.finsight_api:app", "--host", "0.0.0.0", "--port", "6071"]

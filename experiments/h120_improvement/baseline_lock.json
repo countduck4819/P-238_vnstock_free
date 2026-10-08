@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "baseline_id": "h120_shadow_champion_e00_20260824",
+  "phase": "E00_baseline",
+  "status": "frozen_shadow_champion_reproduced",
+  "created_at_utc": "2026-08-24T05:07:17.690049+00:00",
+  "selection_scope": "causal_oof_only",
+  "final_test_used_for_selection": false,
+  "champion": {
+    "upstream_model_version": "xgboost_continuation_h120",
+    "upstream_run_id": "20260823T052814Z",
+    "cascade_version": "wave_cascade_v4_h120_only",
+    "cascade_run_id": "20260823T170819Z",
+    "ranking_column": "p_cascade_calibrated",
+    "shortlist_k": 10,
+    "trade_authorized": false,
+    "deployment_status": "shadow_candidate_requires_new_holdout"
+  },
+  "final_test_policy": {
+    "path": "eval/runs/wave_cascade_prod_v3_final_test/manifest.json",
+    "status": "contaminated_postmortem_only",
+    "selection_allowed": false,
+    "reason": "Final test v3 was already opened before the H120 improvement program."
+  },
+  "metric_tolerance": 1e-12,
+  "reproduced_metric_surfaces": {
+    "upstream_raw_oof": {
+      "rows": 63438,
+      "scored_rows": 63438,
+      "unresolved_target_rows": 0,
+      "days": 130,
+      "positive_rate": 0.16985087802263626,
+      "roc_auc": 0.6420216291894622,
+      "average_precision": 0.22818809269843007,
+      "brier_score": 0.21462421338374024,
+      "threshold": 0.5,
+      "precision": 0.25567453434884246,
+      "recall": 0.6293271461716937,
+      "f1": 0.3636217390138617,
+      "top_k": {
+        "selected_rows": 1300.0,
+        "selected_days": 130.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.2823076923076923,
+        "base_rate": 0.16985087802263626,
+        "lift": 1.6620914510083884,
+        "selected_resolved_rows": 1300.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "upstream_raw_oof",
+      "probability_column": "p_entry_raw",
+      "daily_top10": {
+        "days": 130.0,
+        "daily_precision_at_10_mean": 0.2823076923076923,
+        "daily_precision_at_10_median": 0.3,
+        "daily_base_rate_mean": 0.17603031453937157,
+        "daily_lift_at_10_mean": 1.9571862389796777,
+        "daily_lift_at_10_min": 0.0
+      }
+    },
+    "upstream_temporal_calibration_audit_fold_2024": {
+      "rows": 13971,
+      "scored_rows": 13971,
+      "unresolved_target_rows": 0,
+      "days": 26,
+      "positive_rate": 0.15539331472335552,
+      "roc_auc": 0.7011073550421971,
+      "average_precision": 0.28709378543627506,
+      "brier_score": 0.12497037869521598,
+      "threshold": 0.1941532852180948,
+      "precision": 0.2652806652806653,
+      "recall": 0.5877475817595578,
+      "f1": 0.36556367282624264,
+      "top_k": {
+        "selected_rows": 260.0,
+        "selected_days": 26.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.4307692307692308,
+        "base_rate": 0.15539331472335552,
+        "lift": 2.772122028133083,
+        "selected_resolved_rows": 260.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "upstream_temporal_calibration_audit_fold_2024",
+      "probability_column": "p_entry_calibrated_temporal",
+      "daily_top10": {
+        "days": 26.0,
+        "daily_precision_at_10_mean": 0.4307692307692308,
+        "daily_precision_at_10_median": 0.4,
+        "daily_base_rate_mean": 0.15612554602011489,
+        "daily_lift_at_10_mean": 2.969051742937877,
+        "daily_lift_at_10_min": 0.8299212598425197
+      }
+    },
+    "cascade_raw_causal_oof": {
+      "rows": 54284,
+      "scored_rows": 54284,
+      "unresolved_target_rows": 0,
+      "days": 103,
+      "positive_rate": 0.16555522805983347,
+      "roc_auc": 0.5908937083397395,
+      "average_precision": 0.19423595910368308,
+      "brier_score": 0.14162817236586606,
+      "threshold": 0.1596653800696767,
+      "precision": 0.20908164906449364,
+      "recall": 0.8679203293646378,
+      "f1": 0.33698399326032014,
+      "top_k": {
+        "selected_rows": 1030.0,
+        "selected_days": 103.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.28640776699029125,
+        "base_rate": 0.16555522805983347,
+        "lift": 1.7299832227997074,
+        "selected_resolved_rows": 1030.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "cascade_raw_causal_oof",
+      "probability_column": "p_cascade",
+      "daily_top10": {
+        "days": 103.0,
+        "daily_precision_at_10_mean": 0.28640776699029125,
+        "daily_precision_at_10_median": 0.3,
+        "daily_base_rate_mean": 0.17185966478065653,
+        "daily_lift_at_10_mean": 2.1188494231759387,
+        "daily_lift_at_10_min": 0.0
+      }
+    },
+    "cascade_temporal_calibrated_oof": {
+      "rows": 43012,
+      "scored_rows": 43012,
+      "unresolved_target_rows": 0,
+      "days": 78,
+      "positive_rate": 0.14477355156700455,
+      "roc_auc": 0.48939329899723527,
+      "average_precision": 0.1423619833135689,
+      "brier_score": 0.15382427824734185,
+      "threshold": 0.07367100008937566,
+      "precision": 0.1617087604353799,
+      "recall": 0.982977356672555,
+      "f1": 0.2777286236076136,
+      "top_k": {
+        "selected_rows": 780.0,
+        "selected_days": 78.0,
+        "average_recommendations_per_day": 10.0,
+        "event_weighted_precision": 0.2564102564102564,
+        "base_rate": 0.14477355156700455,
+        "lift": 1.771112566037891,
+        "selected_resolved_rows": 780.0,
+        "selected_unknown_rows": 0.0,
+        "selected_unknown_rate": 0.0
+      },
+      "surface": "cascade_temporal_calibrated_oof",
+      "probability_column": "p_cascade_calibrated",
+      "daily_top10": {
+        "days": 78.0,
+        "daily_precision_at_10_mean": 0.2564102564102564,
+        "daily_precision_at_10_median": 0.25,
+        "daily_base_rate_mean": 0.15000837076404336,
+        "daily_lift_at_10_mean": 2.2803328792356052,
+        "daily_lift_at_10_min": 0.0
+      }
+    }
+  },
+  "files": [
+    {
+      "role": "upstream_manifest",
+      "path": "models/wave_ignition_snapshot/xgboost_continuation_h120/runs/20260823T052814Z/model_manifest.json",
+      "size_bytes": 2488,
+      "sha256": "c8f71b97ea73713c571359b901771936e6aae9400af96da464651fdd5d40ea00"
+    },
+    {
+      "role": "upstream_feature_schema",
+      "path": "models/wave_ignition_snapshot/xgboost_continuation_h120/runs/20260823T052814Z/model/features.json",
+      "size_bytes": 2193,
+      "sha256": "aca80991485cc851081d551961a08ff0b027734397b4b75fc5d2ad1f41aa8345"
+    },
+    {
+      "role": "upstream_oof_predictions",
+      "path": "models/wave_ignition_snapshot/xgboost_continuation_h120/runs/20260823T052814Z/predictions/oof_predictions.parquet",
+      "size_bytes": 1745969,
+      "sha256": "0ab1f026c06288d84d911d419138dc1fab0ecb62f5ab7d7b06e6782a178d68e9"
+    },
+    {
+      "role": "upstream_oof_metrics",
+      "path": "models/wave_ignition_snapshot/xgboost_continuation_h120/runs/20260823T052814Z/audit/oof_metrics.json",
+      "size_bytes": 2538,
+      "sha256": "167486c8ca7e1878dc89df105c66c43a2cda7b99daf45e3b318e4606f984ded9"
+    },
+    {
+      "role": "upstream_fold_metrics",
+      "path": "models/wave_ignition_snapshot/xgboost_continuation_h120/runs/20260823T052814Z/audit/fold_metrics.csv",
+      "size_bytes": 2460,
+      "sha256": "21e84839ff72530f227b7680cd23f8d2e144a6a0fe4aa6dd84b72f590c3bc494"
+    },
+    {
+      "role": "cascade_manifest",
+      "path": "models/wave_ignition_snapshot/wave_cascade_research_v4_h120_only/runs/20260823T170819Z/model_manifest.json",
+      "size_bytes": 1968,
+      "sha256": "8366edc0af406c5651d835b77be71decd21a440ca55e0ff0902ef0af993b9df1"
+    },
+    {
+      "role": "cascade_meta_model",
+      "path": "models/wave_ignition_snapshot/wave_cascade_research_v4_h120_only/runs/20260823T170819Z/model/meta_model.joblib",
+      "size_bytes": 1341,
+      "sha256": "51cb108ec5302c9b51b3eb6b9f8016c1b68a4af1e1832a691d3857bdb784788c"
+    },
+    {
+      "role": "cascade_calibration",
+      "path": "models/wave_ignition_snapshot/wave_cascade_research_v4_h120_only/runs/20260823T170819Z/model/calibration.json",
+      "size_bytes": 444,
+      "sha256": "dbfea236fda2014efaf55d76b299d51f02ecffb43ca7b3f706eb973cf20d8a55"
+    },
+    {
+      "role": "cascade_oof_predictions",
+      "path": "models/wave_ignition_snapshot/wave_cascade_research_v4_h120_only/runs/20260823T170819Z/predictions/oof_predictions.parquet",
+      "size_bytes": 4058786,
+      "sha256": "3285c57c3233daf823a40bd1216e33478daf7b300ffb31289f6ea4667eeaaaad"
+    },
+    {
+      "role": "cascade_oof_metrics",
+      "path": "models/wave_ignition_snapshot/wave_cascade_research_v4_h120_only/runs/20260823T170819Z/audit/metrics.json",
+      "size_bytes": 12401,
+      "sha256": "a809143bbf09f6ff49e3f26cc0f0d91e4a62668e96b5da9980c872d65b6c17ca"
+    },
+    {
+      "role": "cascade_fold_metrics",
+      "path": "models/wave_ignition_snapshot/wave_cascade_research_v4_h120_only/runs/20260823T170819Z/audit/fold_metrics.csv",
+      "size_bytes": 678,
+      "sha256": "833b27b6efb8e3b10d73b86b21e7e4620bfe3c523a5d835ac000147994f02079"
+    },
+    {
+      "role": "cascade_experiment_config",
+      "path": "configs/experiments/wave_cascade_v4_h120_only.yaml",
+      "size_bytes": 747,
+      "sha256": "dad480e013aacc7c52cf1a80fa8e04e831825eba997303f9547f20e9c07f0963"
+    },
+    {
+      "role": "preexisting_cascade_lock",
+      "path": "experiments/baselines/wave_cascade_research_v4_h120_only_lock.json",
+      "size_bytes": 11912,
+      "sha256": "2ff407b84d08e44229cdb1b8a74f171f404c2df06feabaea9de78bdc8ddd63b1"
+    },
+    {
+      "role": "shadow_bundle_manifest",
+      "path": "deploy/wave_h120_shadow/bundle_manifest.json",
+      "size_bytes": 15756,
+      "sha256": "6579c10869f7e667162520a5ee467e79fbbfc0edd14f7a073787e014cd7dfc79"
+    },
+    {
+      "role": "contaminated_final_test_manifest",
+      "path": "eval/runs/wave_cascade_prod_v3_final_test/manifest.json",
+      "size_bytes": 13890,
+      "sha256": "8641307d5461533872acb327f827ba7052fd0bed9754eaadf41fc32bc5299ce3"
+    }
+  ],
+  "git": {
+    "commit": "a7ab6ca914f410bfe22ba2346e2e21ae44605492",
+    "status_clean": false,
+    "status_short": [
+      "?? docs/h120_improvement_execution_plan.md",
+      "?? experiments/h120_improvement/baseline_lock.json",
+      "?? experiments/h120_improvement/registry.json",
+      "?? reports/h120_improvement/E00_baseline/calibration_by_fold.csv",
+      "?? reports/h120_improvement/E00_baseline/daily_top10.csv",
+      "?? reports/h120_improvement/E00_baseline/fold_metrics.csv",
+      "?? reports/h120_improvement/E00_baseline/metrics.json",
+      "?? scripts/run_h120_baseline_lock.py",
+      "?? tests/test_models/test_h120_baseline_lock.py"
+    ]
+  }
+}

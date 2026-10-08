@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "members": [
+    {
+      "id": "stable-user-id",
+      "label": "Display name",
+      "role": "Engineering",
+      "aliases": ["git-user", "Jira display name"]
+    }
+  ]
+}

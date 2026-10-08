@@ -1,0 +1,2 @@
+# Training and frozen daily inference for the direct multi-horizon LSTM branch.
+tensorflow-cpu>=2.20,<2.22

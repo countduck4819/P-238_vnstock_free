@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "provider": "atlassian",
+  "site": {
+    "key": "",
+    "baseUrl": ""
+  },
+  "jira": {
+    "defaultProject": {
+      "key": "",
+      "id": "",
+      "name": "",
+      "url": ""
+    },
+    "inputResolution": {
+      "acceptedInputs": [
+        "jira-key",
+        "jira-issue-url",
+        "jira-project-url"
+      ],
+      "typedVerificationRequired": true,
+      "projectUrlIsNotTicket": true
+    },
+    "boards": {},
+    "workspaceBoardRules": []
+  },
+  "confluence": {
+    "defaultSpace": {
+      "key": "",
+      "name": "",
+      "url": ""
+    }
+  },
+  "gitflow": {
+    "defaultBaseBranch": "develop",
+    "protectedBranches": [
+      "main",
+      "master",
+      "develop"
+    ],
+    "branchTypes": {
+      "feature": {
+        "prefix": "feature/",
+        "base": "develop",
+        "target": "develop"
+      },
+      "bugfix": {
+        "prefix": "bugfix/",
+        "base": "develop",
+        "target": "develop"
+      },
+      "hotfix": {
+        "prefix": "hotfix/",
+        "base": "main",
+        "target": "main"
+      }
+    }
+  }
+}

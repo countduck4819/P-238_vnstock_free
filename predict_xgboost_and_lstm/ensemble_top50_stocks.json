@@ -1,0 +1,315 @@
+{
+  "schema_version": 1,
+  "release_id": "wave_v6_long_term_advisory_20260827_calibration11aug",
+  "release_kind": "long_term_ensemble_top50",
+  "as_of_date": "2026-08-27",
+  "snapshot_date": "2026-08-27",
+  "source_prediction_output": {
+    "path": "deploy/wave_v6_advisory/predictions.csv",
+    "sha256": "7ab0fa0b3c7a23f96b4bcf687b2a2fbb82317bc879aab058740f371ed4e2cbb4",
+    "size_bytes": 47799,
+    "rows": 505
+  },
+  "symbols": [
+    {
+      "rank": 1,
+      "ticker": "JVC",
+      "date": "2026-08-27",
+      "p_ensemble": 0.6974601632287041
+    },
+    {
+      "rank": 2,
+      "ticker": "ST8",
+      "date": "2026-08-27",
+      "p_ensemble": 0.6737347339837482
+    },
+    {
+      "rank": 3,
+      "ticker": "VPG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.6237673184210365
+    },
+    {
+      "rank": 4,
+      "ticker": "HID",
+      "date": "2026-08-27",
+      "p_ensemble": 0.6197591795193437
+    },
+    {
+      "rank": 5,
+      "ticker": "SGR",
+      "date": "2026-08-27",
+      "p_ensemble": 0.6135582026647458
+    },
+    {
+      "rank": 6,
+      "ticker": "NHA",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5978187800939105
+    },
+    {
+      "rank": 7,
+      "ticker": "GIL",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5933070826736119
+    },
+    {
+      "rank": 8,
+      "ticker": "AAS",
+      "date": "2026-08-27",
+      "p_ensemble": 0.589392940451495
+    },
+    {
+      "rank": 9,
+      "ticker": "EVG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5781015169156689
+    },
+    {
+      "rank": 10,
+      "ticker": "HDC",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5702885765867792
+    },
+    {
+      "rank": 11,
+      "ticker": "CKG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5361064316880753
+    },
+    {
+      "rank": 12,
+      "ticker": "DIG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5166111626518304
+    },
+    {
+      "rank": 13,
+      "ticker": "FCN",
+      "date": "2026-08-27",
+      "p_ensemble": 0.506689987990119
+    },
+    {
+      "rank": 14,
+      "ticker": "SZC",
+      "date": "2026-08-27",
+      "p_ensemble": 0.506511005338712
+    },
+    {
+      "rank": 15,
+      "ticker": "VEF",
+      "date": "2026-08-27",
+      "p_ensemble": 0.5041646721683279
+    },
+    {
+      "rank": 16,
+      "ticker": "TCH",
+      "date": "2026-08-27",
+      "p_ensemble": 0.49898391809097303
+    },
+    {
+      "rank": 17,
+      "ticker": "VJC",
+      "date": "2026-08-27",
+      "p_ensemble": 0.49708559055230617
+    },
+    {
+      "rank": 18,
+      "ticker": "NLG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4965807477606566
+    },
+    {
+      "rank": 19,
+      "ticker": "CII",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4965612149139494
+    },
+    {
+      "rank": 20,
+      "ticker": "KDH",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4952558638768181
+    },
+    {
+      "rank": 21,
+      "ticker": "MML",
+      "date": "2026-08-27",
+      "p_ensemble": 0.49125596420790574
+    },
+    {
+      "rank": 22,
+      "ticker": "VCI",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4903126302899486
+    },
+    {
+      "rank": 23,
+      "ticker": "PVB",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4887378518253272
+    },
+    {
+      "rank": 24,
+      "ticker": "HHV",
+      "date": "2026-08-27",
+      "p_ensemble": 0.48516814127669944
+    },
+    {
+      "rank": 25,
+      "ticker": "CEO",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4849015908281686
+    },
+    {
+      "rank": 26,
+      "ticker": "HT1",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4848879404984664
+    },
+    {
+      "rank": 27,
+      "ticker": "KSB",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4847993593616527
+    },
+    {
+      "rank": 28,
+      "ticker": "HKT",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4845408177767245
+    },
+    {
+      "rank": 29,
+      "ticker": "TTF",
+      "date": "2026-08-27",
+      "p_ensemble": 0.48342229302802553
+    },
+    {
+      "rank": 30,
+      "ticker": "HPX",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4826791965704799
+    },
+    {
+      "rank": 31,
+      "ticker": "CSV",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4796774248816666
+    },
+    {
+      "rank": 32,
+      "ticker": "DXS",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4748678171881885
+    },
+    {
+      "rank": 33,
+      "ticker": "L14",
+      "date": "2026-08-27",
+      "p_ensemble": 0.47415616042411857
+    },
+    {
+      "rank": 34,
+      "ticker": "SKG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.47147043733871036
+    },
+    {
+      "rank": 35,
+      "ticker": "TIN",
+      "date": "2026-08-27",
+      "p_ensemble": 0.47140902362010834
+    },
+    {
+      "rank": 36,
+      "ticker": "MSN",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4679593354072057
+    },
+    {
+      "rank": 37,
+      "ticker": "DC4",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4665863283445963
+    },
+    {
+      "rank": 38,
+      "ticker": "FIT",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4664293129503491
+    },
+    {
+      "rank": 39,
+      "ticker": "PNJ",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4660115421745634
+    },
+    {
+      "rank": 40,
+      "ticker": "APG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4658927030849973
+    },
+    {
+      "rank": 41,
+      "ticker": "PDR",
+      "date": "2026-08-27",
+      "p_ensemble": 0.46582218172167017
+    },
+    {
+      "rank": 42,
+      "ticker": "TNH",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4654451505541053
+    },
+    {
+      "rank": 43,
+      "ticker": "HAX",
+      "date": "2026-08-27",
+      "p_ensemble": 0.46500353777965364
+    },
+    {
+      "rank": 44,
+      "ticker": "BIG",
+      "date": "2026-08-27",
+      "p_ensemble": 0.46390251087199696
+    },
+    {
+      "rank": 45,
+      "ticker": "SCR",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4633249926213788
+    },
+    {
+      "rank": 46,
+      "ticker": "HAH",
+      "date": "2026-08-27",
+      "p_ensemble": 0.46225529314242253
+    },
+    {
+      "rank": 47,
+      "ticker": "F88",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4617779632181047
+    },
+    {
+      "rank": 48,
+      "ticker": "GAS",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4606437538659889
+    },
+    {
+      "rank": 49,
+      "ticker": "KBC",
+      "date": "2026-08-27",
+      "p_ensemble": 0.45996980979609764
+    },
+    {
+      "rank": 50,
+      "ticker": "DRH",
+      "date": "2026-08-27",
+      "p_ensemble": 0.4548748284844446
+    }
+  ]
+}

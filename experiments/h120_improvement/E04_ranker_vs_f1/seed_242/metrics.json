@@ -1,0 +1,41 @@
+{
+  "status": "research_only_paired_ranking_evidence",
+  "ranking_contract": "baseline=p_entry_raw; challenger=rank_score",
+  "baseline": {
+    "mean_p_at_10": 0.3553846153846154,
+    "worst_fold_p_at_10": 0.23703703703703705,
+    "fold_p_at_10": {
+      "fold_2020": 0.23703703703703705,
+      "fold_2021": 0.42400000000000004,
+      "fold_2022": 0.3692307692307692,
+      "fold_2023": 0.3038461538461538,
+      "fold_2024": 0.44999999999999996
+    }
+  },
+  "ranker": {
+    "mean_p_at_10": 0.38153846153846155,
+    "worst_fold_p_at_10": 0.23846153846153847,
+    "fold_p_at_10": {
+      "fold_2020": 0.2592592592592593,
+      "fold_2021": 0.468,
+      "fold_2022": 0.5269230769230769,
+      "fold_2023": 0.23846153846153847,
+      "fold_2024": 0.423076923076923
+    }
+  },
+  "paired": {
+    "paired_dates": 130,
+    "mean_delta_precision_at_k": 0.026153846153846153,
+    "mean_delta_map_at_k": 0.032520146520146516,
+    "mean_delta_ndcg_at_k": 0.04036002758033001,
+    "mean_delta_hit_rate_at_k": -0.007692307692307693,
+    "mean_delta_lift": 0.72353683635298,
+    "precision_at_k_bootstrap": {
+      "estimate": 0.026153846153846153,
+      "lower": -0.006923076923076919,
+      "upper": 0.060000000000000005,
+      "samples": 2000
+    }
+  },
+  "not_trade_authorized": true
+}

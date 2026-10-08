@@ -1,0 +1,25 @@
+{
+  "input_symbols": 1512,
+  "loaded_symbols": 1478,
+  "symbols_rejected_before_panel": 34,
+  "status_counts": {
+    "loaded": 1478,
+    "too_short": 34
+  },
+  "panel_rows": 2745409,
+  "eligible_rows": 985358,
+  "labelled_rows_after_weekly_sampling": 121553,
+  "right_censored_eligible_rows": 327319,
+  "latest_eligible_symbols_in_quality_audit": 541,
+  "hard_absolute_liquidity_filter": false,
+  "liquidity_policy": "strict trading-continuity/data-quality gates plus point-in-time relative liquidity features; absolute traded value is audit-only",
+  "row_failure_counts_non_exclusive": {
+    "observed_candle": 947522,
+    "history": 382802,
+    "observed_60": 1611252,
+    "observed_120": 1624222,
+    "zero_volume": 1611252,
+    "corporate_action": 12927,
+    "volume_anomaly": 11708
+  }
+}

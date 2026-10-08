@@ -1,0 +1,18 @@
+{
+  "mapping_path": "data/processed/wave_ignition_v6_snapshot/industry_map_icb.csv",
+  "symbols": 1512,
+  "fields": [
+    "symbol",
+    "icb_level_1_code",
+    "icb_level_1_name",
+    "icb_level_2_code",
+    "icb_level_2_name",
+    "icb_level_3_code",
+    "icb_level_3_name",
+    "icb_level_4_code",
+    "icb_level_4_name"
+  ],
+  "effective_date_column_present": false,
+  "point_in_time_available": false,
+  "production_policy": "sector features are lineage_risk_open; exclude them from the first stock-only ranker."
+}

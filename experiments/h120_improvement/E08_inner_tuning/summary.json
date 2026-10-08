@@ -1,0 +1,14 @@
+{
+  "status": "research_only_inner_search_not_outer_evaluation",
+  "precondition_override": "blocked_until_weight_and_feature_policy_are_locked",
+  "trials_requested": 4,
+  "trials_completed": 0,
+  "folds": [
+    "fold_2021",
+    "fold_2022",
+    "fold_2023",
+    "fold_2024"
+  ],
+  "best_trial": null,
+  "not_trade_authorized": true
+}

@@ -1,0 +1,148 @@
+{
+  "status": "candidate_seed_confirmation_research_only",
+  "protocol": {
+    "protocol_id": "h120_ranker_generation_v2",
+    "feature_group": "stock_primitives",
+    "expected_feature_count": 50,
+    "label_version": "wave_continuation_h120_v3_eventweights",
+    "horizon_sessions": 120,
+    "selection_folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ],
+    "prohibited_selection_folds": [
+      "fold_2024",
+      "final",
+      "future_holdout"
+    ],
+    "confirmation_seeds": [
+      238,
+      239,
+      240,
+      241,
+      242
+    ],
+    "trade_authorized": false
+  },
+  "ranking_seed_summary": {
+    "seeds": [
+      238,
+      239,
+      240,
+      241,
+      242
+    ],
+    "precision_at_k": {
+      "seed_mean": 0.39153846153846156,
+      "seed_std": 0.005210083532363107,
+      "worst_fold_over_seeds": 0.2518518518518518
+    },
+    "map_at_k": {
+      "seed_mean": 0.24222115384615384,
+      "seed_std": 0.009529161562451788,
+      "worst_fold_over_seeds": 0.12650646678424454
+    },
+    "ndcg_at_k": {
+      "seed_mean": 0.3871367145582691,
+      "seed_std": 0.010500327497384868,
+      "worst_fold_over_seeds": 0.25440746572027945
+    },
+    "lift": {
+      "seed_mean": 3.734214029601147,
+      "seed_std": 0.08601800359946347,
+      "worst_fold_over_seeds": 1.3341994816382594
+    },
+    "folds": [
+      "fold_2020",
+      "fold_2021",
+      "fold_2022",
+      "fold_2023"
+    ]
+  },
+  "moving_block_ci_lower_by_seed": {
+    "238": 0.057692307692307696,
+    "239": 0.044230769230769226,
+    "240": 0.05576923076923078,
+    "241": 0.060576923076923084,
+    "242": 0.0673076923076923
+  },
+  "fold_p10_delta_by_seed": {
+    "238": {
+      "fold_2020": 0.0222222222222222,
+      "fold_2021": 0.07200000000000001,
+      "fold_2022": 0.3653846153846154,
+      "fold_2023": 0.13076923076923078
+    },
+    "239": {
+      "fold_2020": -0.014814814814814836,
+      "fold_2021": 0.12,
+      "fold_2022": 0.3307692307692307,
+      "fold_2023": 0.14230769230769233
+    },
+    "240": {
+      "fold_2020": 0.025925925925925963,
+      "fold_2021": 0.06,
+      "fold_2022": 0.3423076923076923,
+      "fold_2023": 0.1346153846153846
+    },
+    "241": {
+      "fold_2020": 0.007407407407407418,
+      "fold_2021": 0.11200000000000004,
+      "fold_2022": 0.34615384615384615,
+      "fold_2023": 0.16153846153846155
+    },
+    "242": {
+      "fold_2020": 0.025925925925925963,
+      "fold_2021": 0.09999999999999998,
+      "fold_2022": 0.3384615384615385,
+      "fold_2023": 0.11923076923076922
+    }
+  },
+  "challenger_fold_lift_by_seed": {
+    "238": {
+      "fold_2020": 1.5104913961381896,
+      "fold_2021": 1.8420484834901876,
+      "fold_2022": 10.338241958828482,
+      "fold_2023": 1.745844588896408
+    },
+    "239": {
+      "fold_2020": 1.3341994816382594,
+      "fold_2021": 2.049009655756035,
+      "fold_2022": 9.813772212916826,
+      "fold_2023": 1.6354820796605947
+    },
+    "240": {
+      "fold_2020": 1.454391727611161,
+      "fold_2021": 1.7298155587214377,
+      "fold_2022": 9.668004084786205,
+      "fold_2023": 1.535020836220125
+    },
+    "241": {
+      "fold_2020": 1.4247677469279152,
+      "fold_2021": 2.0542018331347656,
+      "fold_2022": 9.91366638438691,
+      "fold_2023": 1.706144584352946
+    },
+    "242": {
+      "fold_2020": 1.5110578685460316,
+      "fold_2021": 2.015497601251494,
+      "fold_2022": 9.725045449109267,
+      "fold_2023": 1.7720257100917192
+    }
+  },
+  "diagnostics": {
+    "all_seed_fold_p10_deltas_positive": false,
+    "minimum_seed_fold_p10_delta": -0.014814814814814836
+  },
+  "gates": {
+    "all_seed_moving_block_ci_lower_positive": true,
+    "worst_fold_lift_at_least_1_10": true,
+    "no_challenger_fold_lift_below_1": true,
+    "calibration_is_separate_gate": true
+  },
+  "research_freeze_recommended": true,
+  "production_promotion_recommended": false,
+  "trade_authorized": false
+}

@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "program": "h120_improvement",
+  "selection_scope": "causal_oof_only",
+  "final_test_policy": "contaminated_postmortem_only",
+  "phase_a_status": "research_closed_production_lineage_open",
+  "phase_a_closure": "reports/h120_improvement/data_audit/phase_a_closure.md",
+  "phase_b_status": "research_protocol_frozen_holdout_registered_unopened",
+  "phase_b_protocol": "configs/experiments/h120_ranker_generation_v2.yaml",
+  "future_holdout": "experiments/h120_improvement/E10_future_holdout/registration.json",
+  "experiments": [
+    {
+      "experiment_id": "E00_baseline",
+      "status": "completed",
+      "baseline_id": "h120_shadow_champion_e00_20260824",
+      "lock": "experiments/h120_improvement/baseline_lock.json",
+      "report_root": "reports/h120_improvement/E00_baseline",
+      "next_checkpoint": "E01_correct_daily_top10_evaluator",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E01_daily_top10_evaluator",
+      "status": "completed",
+      "artifacts": [
+        "src/evaluation/wave_model.py",
+        "tests/test_evaluation/test_wave_model_evaluation.py"
+      ],
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E02_weight_ablation",
+      "status": "completed_not_promoted",
+      "decision": "experiments/h120_improvement/E02_weight_ablation/decision.md",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E03_feature_ablation",
+      "status": "completed_research_policy_stock_primitives",
+      "decision": "experiments/h120_improvement/E03_feature_ablation/decision.md",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E04_stock_only_ranker",
+      "status": "completed_not_promoted",
+      "decision": "experiments/h120_improvement/E04_ranker_vs_f1/decision.md",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E05_sector_relative_ranker",
+      "status": "blocked_by_industry_point_in_time_lineage",
+      "policy": "configs/experiments/h120_feature_groups_v1.yaml",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E06_regime_calibration",
+      "status": "runner_ready_ranker_artifact_required",
+      "protocol": "configs/experiments/h120_ranker_calibration_generation_v2.yaml",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E07_label_sensitivity",
+      "status": "completed_diagnostic_only",
+      "report_root": "reports/h120_improvement/label_sensitivity",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E08_nested_tuned_ranker",
+      "status": "completed_no_go",
+      "decision": "experiments/h120_improvement/E08_outer_evaluation_2024/decision.md",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E08_generation_v2_phase_c",
+      "status": "ready_snapshot_required",
+      "protocol": "configs/experiments/h120_ranker_generation_v2.yaml",
+      "runbook": "experiments/h120_improvement/E08_generation_v2/README.md",
+      "selection_folds": ["fold_2020", "fold_2021", "fold_2022", "fold_2023"],
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E09_refit",
+      "status": "blocked_by_E08_no_go",
+      "final_test_used_for_selection": false
+    },
+    {
+      "experiment_id": "E10_shadow_challenger",
+      "status": "blocked_by_E08_no_go",
+      "final_test_used_for_selection": false
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+    "schema_version": 1,
+    "release_id": "wave_h120_advisory_20260901_20260828",
+    "release_kind": "production_serving_advisory",
+    "created_at_utc": "2026-09-01T11:10:50.228108+00:00",
+    "source_orchestration_manifest": "runs/wave_h120_shadow/2026-08-28_20260901T071451Z/orchestration_manifest.json",
+    "snapshot_date": "2026-08-28",
+    "as_of_date": "2026-08-28",
+    "prediction_output": {
+        "path": "runs/wave_h120_shadow/2026-08-28_20260901T071451Z/predictions/2026-08-28/predictions.parquet",
+        "sha256": "a9e5bbc5db25308942f47d9fbb5eb031ba267bf8560910aea0027c076c3c68aa",
+        "size_bytes": 29264
+    },
+    "model_bundle": "deploy/wave_h120_shadow/bundle_manifest.json",
+    "contract": {
+        "horizon_sessions": 120,
+        "probability_field": "continuation_probability_h120",
+        "advisory_only": true,
+        "trade_authorized": false,
+        "serving_access": "premium_and_admin"
+    },
+    "promotion_blocker": "requires_new_untouched_holdout_and_cost_aware_backtest"
+}
+
+// {
+//   "schema_version": 1,
+//   "release_id": "wave_h120_advisory_20260824",
+//   "release_kind": "production_serving_advisory",
+//   "created_at_utc": "2026-08-24T14:14:37.847608+00:00",
+//   "source_orchestration_manifest": "runs/wave_h120_shadow/2026-08-23_20260824T141201Z/orchestration_manifest.json",
+//   "snapshot_date": "2026-08-23",
+//   "as_of_date": "2026-08-21",
+//   "prediction_output": {
+//     "path": "runs/wave_h120_shadow/2026-08-23_20260824T141201Z/predictions/2026-08-21/predictions.parquet",
+//     "sha256": "0f580360ca50db0539c36170e48fbd97ee353c39cfc53d9600b5ab286d139bfe",
+//     "size_bytes": 29529
+//   },
+//   "model_bundle": "deploy/wave_h120_shadow/bundle_manifest.json",
+//   "runtime": {
+//     "scikit_learn": "1.7.0",
+//     "inference_replay": "deterministic_verified"
+//   },
+//   "contract": {
+//     "horizon_sessions": 120,
+//     "probability_field": "continuation_probability_h120",
+//     "advisory_only": true,
+//     "trade_authorized": false,
+//     "serving_access": "premium_and_admin"
+//   },
+//   "promotion_blocker": "requires_new_untouched_holdout_and_cost_aware_backtest"
+// }

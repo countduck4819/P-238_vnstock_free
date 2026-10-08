@@ -1,0 +1,106 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude",
+            "shell": "bash"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc hook-script .agents/orchestration/scripts/graph_prompt_hook.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc codegraph-prompt-hook",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude",
+            "shell": "bash"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc post-tool-audit || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/_pyrun.sh scripts/log_hook.py --tool=claude",
+            "shell": "bash"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc hook-script .agents/orchestration/scripts/loop_guard.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc session-start"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Bash|mcp__.*read_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc rules-guard",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "adlc agent-tool-gate || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
