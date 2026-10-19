@@ -27,7 +27,8 @@ Thumbs.db
 Thumbs.db
 
 # Data (never commit large data)
-models/
+# Only the top-level trained-model folder; src/models/ is source code.
+/models/
 eval/runs/
 models_wave_v6/
 predictions/
@@ -145,9 +146,13 @@ data/*
 !data/industries.json
 !data/stocks_by_industries.json
 !data/vnindex.json
+# FinSight needs the small taxonomy/config files in data/vnstock/metadata/.
+!data/vnstock/
+data/vnstock/*
+!data/vnstock/metadata/
 
-# Raw vnstock snapshots, probes, caches and training data are never committed.
-data/vnstock/
+# Raw vnstock snapshots, probes, caches and training data are never committed
+# (everything under data/vnstock/ except metadata/, see above).
 
 # Database
 db/

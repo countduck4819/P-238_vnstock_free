@@ -535,11 +535,16 @@ class QueryTools:
         if self._embedder is None:
             from sentence_transformers import SentenceTransformer
 
-            self._embedder = SentenceTransformer(
-                self._embedding_config["embedding_model"],
-                revision=self._embedding_config.get("embedding_revision"),
-                local_files_only=True,
-            )
+            model = self._embedding_config["embedding_model"]
+            revision = self._embedding_config.get("embedding_revision")
+            try:
+                self._embedder = SentenceTransformer(
+                    model, revision=revision, local_files_only=True
+                )
+            except OSError:
+                # A fresh Docker volume has no cached model yet: download the
+                # pinned revision once into HF_HOME, then stay offline.
+                self._embedder = SentenceTransformer(model, revision=revision)
         return self._qdrant, self._embedder, self._embedding_config
 
     def search_company_knowledge(
