@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useMotionValue, animate, type PanInfo } from "framer-motion";
 import {
     Paperclip,
@@ -18,7 +18,7 @@ import {
     RotateCcw,
 } from "lucide-react";
 import { pushUserMessage, clearMessages } from "@/store/ai-chat/aiChat.reducer";
-import { askAIQuery } from "@/store/ai-chat/aiChat.api";
+import { askAIQuery, fetchAIHistoryQuery } from "@/store/ai-chat/aiChat.api";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useAuth } from "@/auth/AuthProvider";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,6 @@ export default function AIChat() {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
     const router = useRouter();
-    const pathname = usePathname();
 
     const { messages, loading } = useAppSelector((s) => s.aiChat);
 
@@ -136,16 +135,15 @@ export default function AIChat() {
         previousLengthRef.current = messages.length;
     }, [messages]);
 
-    // Mỗi khi vào trang hoặc load lại trang: tự động làm mới đoạn chat
+    // Tải lịch sử chat của tài khoản đang đăng nhập (giữ nguyên khi chuyển trang);
+    // khi đăng xuất hoặc đổi tài khoản thì xoá đoạn chat cũ khỏi màn hình.
     useEffect(() => {
         dispatch(clearMessages());
         setStreamedIndices(new Set());
-        setQuestion("");
-        setAttachedFile(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
+        if (user?.id) {
+            dispatch(fetchAIHistoryQuery(user.id));
         }
-    }, [pathname, dispatch]);
+    }, [user?.id, dispatch]);
 
     // Listen for external open chat events
     useEffect(() => {
@@ -219,12 +217,23 @@ export default function AIChat() {
     useEffect(() => {
         if (!boxRef.current) return;
         requestAnimationFrame(() => {
-            boxRef.current!.scrollTo({
-                top: boxRef.current!.scrollHeight,
+            boxRef.current?.scrollTo({
+                top: boxRef.current.scrollHeight,
                 behavior: "smooth",
             });
         });
     }, [messages, loading]);
+
+    // Mở khung chat: nhảy thẳng xuống tin nhắn mới nhất (không cuộn chậm qua cả lịch sử)
+    useEffect(() => {
+        if (!open) return;
+        const frame = requestAnimationFrame(() => {
+            if (boxRef.current) {
+                boxRef.current.scrollTop = boxRef.current.scrollHeight;
+            }
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [open, isExpanded]);
 
     // Drag and drop handlers
     const handleDragOver = (e: React.DragEvent) => {

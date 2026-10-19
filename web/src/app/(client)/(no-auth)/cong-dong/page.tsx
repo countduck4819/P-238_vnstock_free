@@ -483,10 +483,10 @@ export default function CommunityPage() {
 
                                 <div className="flex-1 min-w-0">
                                     <textarea
-                                        rows={isPostingOpen ? 4 : 2}
+                                        rows={isPostingOpen ? 4 : 3}
                                         placeholder={
                                             isAuthenticated
-                                                ? `Chào ${user?.fullName || user?.username || "bạn"}, hôm nay bạn có nhận định gì về thị trường? Gõ $MÃ để tag cổ phiếu...`
+                                                ? `Chào ${user?.fullName || user?.username || "bạn"}, bạn nhận định gì về thị trường hôm nay? Gõ $MÃ để tag cổ phiếu`
                                                 : "Đăng nhập để chia sẻ nhận định và thảo luận cùng cộng đồng..."
                                         }
                                         value={newPostContent}

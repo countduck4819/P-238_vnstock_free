@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Inject,
   Param,
@@ -17,6 +18,8 @@ import { AiStockServiceToken, UserRole } from 'src/shared';
 import { Roles } from 'src/shared/decorator/roles.decorator';
 import { Public } from 'src/shared/decorator/is-public.decorator';
 import { AiStockAskDto, AiStockHistoryDto } from './ai-stock.dto';
+import { CurrentUser } from 'src/shared/decorator/current-user.decorator';
+import type { AuthUser } from 'src/shared/decorator/current-user.decorator';
 
 @ApiBearerAuth()
 @Controller('/ai-stock')
@@ -66,8 +69,15 @@ export class AiStockController {
     return this.aiStockService.askStockAi(dto);
   }
 
+  // Lịch sử chat chỉ trả cho chính chủ (hoặc admin), không cho xem của người khác.
   @Get('history/:userId')
-  async getHistory(@Param('userId', ParseIntPipe) userId: number) {
+  async getHistory(
+    @Param('userId', ParseIntPipe) userId: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    if (user?.id !== userId && user?.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Không có quyền xem lịch sử chat này');
+    }
     return this.aiStockService.getHistoryByUser(userId);
   }
 }

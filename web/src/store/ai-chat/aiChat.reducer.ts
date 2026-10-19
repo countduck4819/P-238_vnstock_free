@@ -64,13 +64,11 @@ const aiChatSlice = createSlice({
             });
 
         builder
+            // Tải lịch sử chạy nền: không bật hiệu ứng "AI đang trả lời".
             .addCase(fetchAIHistoryQuery.pending, (state) => {
-                state.loading = true;
                 state.error = null;
             })
             .addCase(fetchAIHistoryQuery.fulfilled, (state, action) => {
-                state.loading = false;
-
                 const history = action.payload || [];
                 state.messages = [];
                 history.forEach((item: any) => {
@@ -85,7 +83,6 @@ const aiChatSlice = createSlice({
                 });
             })
             .addCase(fetchAIHistoryQuery.rejected, (state, action) => {
-                state.loading = false;
                 state.error = action.payload as string;
             });
     },

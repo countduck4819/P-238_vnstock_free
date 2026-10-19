@@ -438,7 +438,10 @@ export default function MarketHeatmap() {
                             label: {
                                 show: true,
                                 position: "inside",
-                                overflow: "hidden",
+                                // "hidden" không cắt rich text nên chữ tràn sang ô bên cạnh;
+                                // "truncate" cắt gọn trong ô (ô quá nhỏ thì chỉ hiện phần vừa).
+                                overflow: "truncate",
+                                ellipsis: "",
                                 rich: {
                                     ticker: {
                                         fontSize: isMobile ? 11 : 14,

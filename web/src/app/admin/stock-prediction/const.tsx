@@ -11,11 +11,26 @@ export interface StockPrediction {
     predictedOn: string;
 }
 
+// Giá lưu dạng float (vd 2.0999999046325684): hiển thị tối đa 3 chữ số thập phân.
+const formatPrice = (value: number | string | null | undefined) => {
+    const price = Number(value);
+    if (value == null || !Number.isFinite(price)) return "—";
+    return price.toLocaleString("en-US", { maximumFractionDigits: 3 });
+};
+
 export const stockPredictionColumns: Column<StockPrediction>[] = [
     { key: "id", header: "ID" },
     { key: "ticker", header: "Mã" },
-    { key: "lastClosePrice", header: "Giá đóng gần nhất" },
-    { key: "predictedPrice", header: "Giá dự đoán" },
+    {
+        key: "lastClosePrice",
+        header: "Giá đóng gần nhất",
+        render: (item) => formatPrice(item.lastClosePrice),
+    },
+    {
+        key: "predictedPrice",
+        header: "Giá dự đoán",
+        render: (item) => formatPrice(item.predictedPrice),
+    },
     {
         key: "pEnsemble",
         header: "Xác suất tăng",
