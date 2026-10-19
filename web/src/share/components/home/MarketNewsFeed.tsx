@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Newspaper, RefreshCw } from "lucide-react";
 import { api } from "@/utils/axiosInstance";
+import { formatRelativeTime } from "@/app/(client)/(no-auth)/cong-dong/components/formatRelativeTime";
 
 interface NewsItem {
     id: number;
@@ -93,9 +94,15 @@ export default function MarketNewsFeed() {
 
     return (
         <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-2 bg-slate-50/70 dark:bg-slate-900/90">
-                <Newspaper className="w-4 h-4 text-indigo-500" />
-                <h2 className="font-bold text-sm text-slate-900 dark:text-white">Tin tức thị trường</h2>
+            <div className="relative px-4 py-3.5 flex items-center gap-3 border-b border-slate-200/80 dark:border-slate-800">
+                <span className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r bg-blue-500" aria-hidden="true" />
+                <span className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <Newspaper className="w-[18px] h-[18px]" />
+                </span>
+                <div>
+                    <h2 className="font-bold text-[15px] leading-tight text-slate-900 dark:text-white">Bài viết &amp; tin tức</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Cập nhật liên tục các diễn biến mới nhất</p>
+                </div>
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -105,7 +112,7 @@ export default function MarketNewsFeed() {
                         href={`/tin-tuc/${item.slug}`}
                         className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                        <div className="relative w-24 sm:w-32 aspect-[4/3] shrink-0 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
+                        <div className="relative w-24 sm:w-36 aspect-[4/3] shrink-0 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
                             {item.news_image_url ? (
                                 <Image
                                     src={item.news_image_url}
@@ -122,18 +129,22 @@ export default function MarketNewsFeed() {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 text-xs mb-1">
-                                {item.symbol && (
-                                    <span className="font-bold text-blue-600 dark:text-blue-400">{item.symbol}</span>
-                                )}
-                                <span className="text-slate-400">{formatDate(item.public_date)}</span>
-                            </div>
+                            {item.symbol && (
+                                <span className="inline-block mb-1.5 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                                    {item.symbol}
+                                </span>
+                            )}
                             <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                 {item.news_title}
                             </h3>
                             {item.news_short_content && (
                                 <p className="hidden sm:block text-sm text-slate-600 dark:text-slate-300 line-clamp-2 mt-1">
                                     {item.news_short_content}
+                                </p>
+                            )}
+                            {item.public_date && (
+                                <p className="text-xs text-slate-400 mt-1.5" title={formatDate(item.public_date)}>
+                                    {formatRelativeTime(item.public_date)}
                                 </p>
                             )}
                         </div>

@@ -3,45 +3,55 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useState } from "react";
-import { Eye, Loader2, MessageCircle, Minus, ThumbsUp, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { toast } from "react-toastify";
+import { ArrowRight, Loader2, MessageSquare, MessagesSquare, MoreHorizontal, Share2, ThumbsUp } from "lucide-react";
 import { api } from "@/utils/axiosInstance";
 import { useAuth } from "@/auth/AuthProvider";
 import UserAvatar from "@/share/components/UserAvatar";
 import type { CommunityPost } from "@/store/community/community.reducer";
 import { formatRelativeTime } from "@/app/(client)/(no-auth)/cong-dong/components/formatRelativeTime";
 
-// Nhận định của bài đăng hiển thị như nhãn tích cực/tiêu cực cạnh mã cổ phiếu (kiểu FireAnt).
-const SENTIMENT: Record<string, { text: string; Icon: typeof TrendingUp; className: string }> = {
-    BUY: { text: "Tích cực", Icon: TrendingUp, className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
-    SELL: { text: "Tiêu cực", Icon: TrendingDown, className: "bg-rose-500/10 text-rose-600 dark:text-rose-400" },
-    HOLD: { text: "Trung lập", Icon: Minus, className: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-};
+const MAX_CHIPS = 3;
+const TOKEN_RE = /(https?:\/\/[^\s]+|\$[A-Z0-9]{3,8}\b)/g;
 
-const TABS = [
-    { key: "all", label: "Mới nhất" },
-    { key: "hot", label: "Nổi bật" },
-] as const;
-
-type TabKey = (typeof TABS)[number]["key"];
-
-/** Tô xanh các mã được gắn dạng $MÃ trong nội dung. */
-function renderWithTickers(text: string) {
-    return text.split(/(\$[A-Z0-9]{3,5})\b/g).map((part, i) =>
-        /^\$[A-Z0-9]{3,5}$/.test(part) ? (
-            <span key={i} className="font-semibold text-blue-600 dark:text-blue-400">
-                {part}
-            </span>
-        ) : (
-            <Fragment key={i}>{part}</Fragment>
-        ),
-    );
+/** Nội dung chữ thường, đường link và $MÃ tô xanh như FireAnt. */
+function renderContent(text: string) {
+    return text.split(TOKEN_RE).map((part, i) => {
+        if (/^https?:\/\//.test(part)) {
+            return (
+                <a
+                    key={i}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                    {part}
+                </a>
+            );
+        }
+        if (/^\$[A-Z0-9]{3,8}$/.test(part)) {
+            return (
+                <span key={i} className="text-blue-600 dark:text-blue-400">
+                    {part}
+                </span>
+            );
+        }
+        return <Fragment key={i}>{part}</Fragment>;
+    });
 }
 
-/** Luồng bài đăng Cộng đồng ở trang chủ, bố cục giống luồng thảo luận của FireAnt. */
+/** Mã được gắn của bài: mã chính trước, sau đó các $MÃ nhắc trong tiêu đề và nội dung. */
+function postSymbols(post: CommunityPost) {
+    const found = `${post.title ?? ""} ${post.content}`.match(/\$[A-Z0-9]{3,8}\b/g) ?? [];
+    return [...new Set([post.symbol, ...found.map((s) => s.slice(1))].filter(Boolean) as string[])];
+}
+
+/** Cột "Thảo luận - Góc nhìn cộng đồng", bố cục theo khối thảo luận của FireAnt. */
 export default function CommunityPostsWidget({ limit = 5 }: { limit?: number }) {
     const router = useRouter();
     const { user } = useAuth();
-    const [tab, setTab] = useState<TabKey>("all");
     const [posts, setPosts] = useState<CommunityPost[] | null>(null);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -49,18 +59,15 @@ export default function CommunityPostsWidget({ limit = 5 }: { limit?: number }) 
 
     const load = useCallback(
         async (nextPage: number) => {
-            const res = await api.get("/community/posts", {
-                params: { page: nextPage, limit, category: tab },
-            });
+            const res = await api.get("/community/posts", { params: { page: nextPage, limit } });
             const data = res.data?.data;
             return { posts: (data?.posts ?? []) as CommunityPost[], total: Number(data?.total ?? 0) };
         },
-        [limit, tab],
+        [limit],
     );
 
     useEffect(() => {
         let cancelled = false;
-        setPosts(null);
         load(1)
             .then((r) => {
                 if (cancelled) return;
@@ -112,82 +119,97 @@ export default function CommunityPostsWidget({ limit = 5 }: { limit?: number }) 
         }
     };
 
+    const share = async (post: CommunityPost) => {
+        const url = `${window.location.origin}/cong-dong#${post.id}`;
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: post.title || post.authorName, url });
+            } else {
+                await navigator.clipboard.writeText(url);
+                toast.success("Đã sao chép liên kết bài viết");
+            }
+        } catch {
+            // Người dùng huỷ chia sẻ.
+        }
+    };
+
     const hasMore = posts !== null && posts.length < total;
 
     return (
         <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-            <div className="px-4 pt-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-indigo-500" />
-                    <h2 className="font-bold text-sm text-slate-900 dark:text-white">Cộng đồng</h2>
+            <div className="relative px-4 py-3.5 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800">
+                <span className="absolute left-0 top-3.5 bottom-3.5 w-1 rounded-r bg-violet-500" aria-hidden="true" />
+                <div className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                        <MessagesSquare className="w-[18px] h-[18px]" />
+                    </span>
+                    <div>
+                        <h2 className="font-bold text-[15px] leading-tight text-slate-900 dark:text-white">Thảo luận</h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Góc nhìn cộng đồng</p>
+                    </div>
                 </div>
-                <Link href="/cong-dong" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                    Xem tất cả
+                <Link
+                    href="/cong-dong"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                    Toàn bộ <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
             </div>
 
-            <div className="px-4 mt-2 flex gap-4 border-b border-slate-200/80 dark:border-slate-800">
-                {TABS.map((t) => (
-                    <button
-                        key={t.key}
-                        type="button"
-                        onClick={() => setTab(t.key)}
-                        className={`pb-2 -mb-px text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
-                            tab === t.key
-                                ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
-                                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                        }`}
-                    >
-                        {t.label}
-                    </button>
-                ))}
-            </div>
-
             {posts === null ? (
-                <div className="p-3 space-y-3">
+                <div className="p-4 space-y-4">
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-24 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                        <div key={i} className="h-32 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
                     ))}
                 </div>
             ) : posts.length === 0 ? (
                 <p className="p-5 text-center text-sm text-slate-500 dark:text-slate-400">
-                    Chưa có bài đăng nào.{" "}
-                    <Link href="/cong-dong" className="text-indigo-600 dark:text-indigo-400 font-semibold">
+                    Chưa có thảo luận nào.{" "}
+                    <Link href="/cong-dong" className="text-blue-600 dark:text-blue-400 font-semibold">
                         Đăng bài đầu tiên
                     </Link>
                 </p>
             ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                <div className="divide-y divide-slate-200/80 dark:divide-slate-800">
                     {posts.map((post) => {
-                        const sentiment = post.stance ? SENTIMENT[post.stance] : undefined;
                         const href = `/cong-dong#${post.id}`;
+                        const symbols = postSymbols(post);
                         return (
-                            <article key={post.id} className="px-4 py-3">
-                                <div className="flex items-start gap-2.5">
-                                    <UserAvatar src={post.authorAvatar} name={post.authorName} size={36} className="shrink-0" />
+                            <article key={post.id} className="px-4 pt-4">
+                                <div className="flex items-center gap-3">
+                                    <UserAvatar src={post.authorAvatar} name={post.authorName} size={40} className="shrink-0" />
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5 min-w-0">
-                                            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                                                {post.authorName}
-                                            </span>
-                                            {post.authorBadge && post.authorBadge !== "Thành viên" && (
-                                                <span className="shrink-0 text-[10px] font-bold px-1.5 py-px rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                                                    {post.authorBadge}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-[11px] text-slate-400">{formatRelativeTime(post.createdAt)}</p>
+                                        <p className="text-[15px] font-bold text-slate-900 dark:text-slate-100 truncate">
+                                            {post.authorName}
+                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            {formatRelativeTime(post.createdAt)}
+                                        </p>
                                     </div>
+                                    <Link
+                                        href={href}
+                                        aria-label="Mở bài viết"
+                                        className="p-1.5 -mr-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    >
+                                        <MoreHorizontal className="w-5 h-5" />
+                                    </Link>
                                 </div>
 
-                                <Link href={href} className="block mt-2 group">
+                                {/* div thay cho Link vì nội dung có thể chứa thẻ <a> (link trong bài) */}
+                                <div
+                                    role="link"
+                                    tabIndex={0}
+                                    onClick={() => router.push(href)}
+                                    onKeyDown={(e) => e.key === "Enter" && router.push(href)}
+                                    className="block mt-3 cursor-pointer"
+                                >
                                     {post.title && (
-                                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 wrap-anywhere group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 wrap-anywhere mb-1">
                                             {post.title}
-                                        </h3>
+                                        </p>
                                     )}
-                                    <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 line-clamp-3 wrap-anywhere">
-                                        {renderWithTickers(post.content)}
+                                    <p className="text-sm leading-6 text-slate-700 dark:text-slate-300 whitespace-pre-line line-clamp-5 wrap-anywhere">
+                                        {renderContent(post.content)}
                                     </p>
                                     {post.imageUrl && (
                                         // eslint-disable-next-line @next/next/no-img-element
@@ -196,44 +218,55 @@ export default function CommunityPostsWidget({ limit = 5 }: { limit?: number }) 
                                             alt=""
                                             loading="lazy"
                                             onError={(e) => (e.currentTarget.style.display = "none")}
-                                            className="mt-2 w-full max-h-40 object-cover rounded-lg border border-slate-200/60 dark:border-slate-700/60"
+                                            className="mt-3 w-full max-h-48 object-cover rounded-xl"
                                         />
                                     )}
-                                </Link>
+                                </div>
 
-                                {post.symbol && (
-                                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                        <Link
-                                            href={`/ma-chung-khoan/${post.symbol}`}
-                                            className="text-xs font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
-                                        >
-                                            {post.symbol}
-                                        </Link>
-                                        {sentiment && (
-                                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${sentiment.className}`}>
-                                                <sentiment.Icon className="w-3 h-3" /> {sentiment.text}
-                                            </span>
+                                {symbols.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        {symbols.slice(0, MAX_CHIPS).map((symbol) => (
+                                            <Link
+                                                key={symbol}
+                                                href={`/ma-chung-khoan/${symbol.toLowerCase()}`}
+                                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                            >
+                                                {symbol}
+                                            </Link>
+                                        ))}
+                                        {symbols.length > MAX_CHIPS && (
+                                            <Link href={href} aria-label="Xem thêm mã" className="px-1.5 text-slate-500">
+                                                <MoreHorizontal className="w-5 h-5" />
+                                            </Link>
                                         )}
                                     </div>
                                 )}
 
-                                <div className="mt-2 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                                <div className="mt-3 grid grid-cols-3 border-t border-slate-200/80 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300">
                                     <button
                                         type="button"
                                         onClick={() => toggleLike(post)}
-                                        className={`inline-flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
+                                        className={`py-2.5 inline-flex items-center justify-center gap-1.5 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 ${
                                             post.isLiked ? "text-blue-600 dark:text-blue-400 font-semibold" : ""
                                         }`}
                                     >
-                                        <ThumbsUp className="w-3.5 h-3.5" fill={post.isLiked ? "currentColor" : "none"} />
-                                        {post.likes}
+                                        <ThumbsUp className="w-4 h-4" fill={post.isLiked ? "currentColor" : "none"} />
+                                        Thích{post.likes > 0 ? ` ${post.likes}` : ""}
                                     </button>
-                                    <Link href={href} className="inline-flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
-                                        <MessageCircle className="w-3.5 h-3.5" /> {post.commentsCount}
+                                    <Link
+                                        href={href}
+                                        className="py-2.5 inline-flex items-center justify-center gap-1.5 hover:text-blue-600 dark:hover:text-blue-400"
+                                    >
+                                        <MessageSquare className="w-4 h-4" />
+                                        Bình luận{post.commentsCount > 0 ? ` ${post.commentsCount}` : ""}
                                     </Link>
-                                    <span className="inline-flex items-center gap-1">
-                                        <Eye className="w-3.5 h-3.5" /> {post.viewsCount ?? 0}
-                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => share(post)}
+                                        className="py-2.5 inline-flex items-center justify-center gap-1.5 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                                    >
+                                        <Share2 className="w-4 h-4" /> Chia sẻ
+                                    </button>
                                 </div>
                             </article>
                         );
@@ -246,10 +279,10 @@ export default function CommunityPostsWidget({ limit = 5 }: { limit?: number }) 
                     type="button"
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="w-full py-2.5 border-t border-slate-200/80 dark:border-slate-800 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    className="w-full py-3 border-t border-slate-200/80 dark:border-slate-800 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                 >
-                    {loadingMore && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    Xem thêm bài đăng
+                    {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Xem thêm thảo luận
                 </button>
             )}
         </section>
