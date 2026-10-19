@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Check, CheckCheck, Loader2, MessageCircle, Search, Send, Wifi, WifiOff } from "lucide-react";
@@ -18,6 +18,7 @@ import { useCommunityRealtime } from "../components/CommunityRealtimeProvider";
 import { formatRelativeTime } from "../components/formatRelativeTime";
 
 const TYPING_IDLE_MS = 2500;
+const QUICK_GREETINGS = ["Chào bạn 👋", "Bạn đang theo dõi mã nào?", "Cho mình hỏi về nhận định của bạn"];
 
 export default function MessagesPage() {
     return (
@@ -73,8 +74,8 @@ function Messenger() {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-            <div className="max-w-[1200px] mx-auto px-4 py-4">
-                <div className="flex items-center justify-between mb-3">
+            <div className="max-w-[1200px] mx-auto px-0 sm:px-4 py-0 sm:py-4">
+                <div className={`${active ? "hidden md:flex" : "flex"} items-center justify-between px-4 sm:px-0 py-3 sm:pt-0`}>
                     <Link
                         href="/cong-dong"
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600"
@@ -84,7 +85,7 @@ function Messenger() {
                     <ConnectionBadge connected={connected} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-[calc(100dvh-8.5rem)] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                <div className={`grid grid-cols-1 md:grid-cols-[320px_1fr] ${active ? "h-[calc(100dvh-4.1rem-1px)]" : "h-[calc(100dvh-7.2rem)]"} sm:h-[calc(100dvh-8.5rem)] sm:rounded-2xl overflow-hidden border-y sm:border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm`}>
                     <aside className={`${active ? "hidden md:flex" : "flex"} flex-col border-r border-slate-200/80 dark:border-slate-800 min-h-0`}>
                         <ConversationSidebar
                             conversations={conversations}
@@ -352,7 +353,7 @@ function ConversationThread({
                 </div>
             </header>
 
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5 bg-slate-50/60 dark:bg-slate-950/40">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5 bg-slate-50/60 dark:bg-slate-950/40">
                 {thread?.hasMore && (
                     <div className="text-center pb-2">
                         <button
@@ -369,16 +370,45 @@ function ConversationThread({
                 {!thread?.loaded ? (
                     <CenteredSpinner small />
                 ) : messages.length === 0 ? (
-                    <EmptyNote>Hãy gửi lời chào đầu tiên tới {conversation.partner.name} 👋</EmptyNote>
+                    <div className="flex flex-col items-center text-center gap-2 py-10">
+                        <UserAvatar src={conversation.partner.avatar} name={conversation.partner.name} size={64} />
+                        <p className="text-sm font-bold">{conversation.partner.name}</p>
+                        <p className="text-xs text-slate-400">{conversation.partner.badge}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Hãy gửi lời chào đầu tiên 👋</p>
+                        <div className="flex flex-wrap justify-center gap-2 mt-1">
+                            {QUICK_GREETINGS.map((text) => (
+                                <button
+                                    key={text}
+                                    type="button"
+                                    onClick={() => setDraft(text)}
+                                    className="px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-900 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer"
+                                >
+                                    {text}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 ) : (
-                    messages.map((message) => (
-                        <MessageBubble
-                            key={message.id}
-                            message={message}
-                            mine={message.senderId === viewerId}
-                            seen={message.id === lastSeenId}
-                        />
-                    ))
+                    messages.map((message, i) => {
+                        const prev = messages[i - 1];
+                        const next = messages[i + 1];
+                        const day = dayKey(message.createdAt);
+                        const newDay = !prev || dayKey(prev.createdAt) !== day;
+                        const lastInGroup =
+                            !next || next.senderId !== message.senderId || dayKey(next.createdAt) !== day;
+                        return (
+                            <Fragment key={message.id}>
+                                {newDay && <DaySeparator date={message.createdAt} />}
+                                <MessageBubble
+                                    message={message}
+                                    mine={message.senderId === viewerId}
+                                    seen={message.id === lastSeenId}
+                                    partner={conversation.partner}
+                                    lastInGroup={lastInGroup}
+                                />
+                            </Fragment>
+                        );
+                    })
                 )}
 
                 {partnerTyping && (
@@ -425,25 +455,71 @@ function ConversationThread({
     );
 }
 
-function MessageBubble({ message, mine, seen }: { message: ChatMessage; mine: boolean; seen: boolean }) {
+function dayKey(value: string) {
+    return new Date(value).toDateString();
+}
+
+function DaySeparator({ date }: { date: string }) {
+    const d = new Date(date);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const label =
+        d.toDateString() === today.toDateString()
+            ? "Hôm nay"
+            : d.toDateString() === yesterday.toDateString()
+              ? "Hôm qua"
+              : d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    return (
+        <div className="flex items-center gap-3 py-2">
+            <span className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+            <span className="text-[11px] font-semibold text-slate-400">{label}</span>
+            <span className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+        </div>
+    );
+}
+
+// Tin liên tiếp của cùng một người gom thành một cụm: avatar và giờ chỉ hiện ở tin cuối cụm.
+function MessageBubble({
+    message,
+    mine,
+    seen,
+    partner,
+    lastInGroup,
+}: {
+    message: ChatMessage;
+    mine: boolean;
+    seen: boolean;
+    partner: ChatMember;
+    lastInGroup: boolean;
+}) {
     const time = new Date(message.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
     return (
-        <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
-            <div
-                className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap break-words ${
-                    mine
-                        ? "bg-blue-600 text-white rounded-br-md"
-                        : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-md border border-slate-200/70 dark:border-slate-700/60"
-                }`}
-                title={new Date(message.createdAt).toLocaleString("vi-VN")}
-            >
-                {message.content}
+        <div className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"} ${lastInGroup ? "pb-1.5" : ""}`}>
+            {!mine && (
+                <div className="w-7 shrink-0 self-end mb-4">
+                    {lastInGroup && <UserAvatar src={partner.avatar} name={partner.name} size={28} />}
+                </div>
+            )}
+            <div className={`flex flex-col max-w-[75%] min-w-0 ${mine ? "items-end" : "items-start"}`}>
+                <div
+                    className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere ${
+                        mine
+                            ? `bg-blue-600 text-white ${lastInGroup ? "rounded-br-md" : ""}`
+                            : `bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/70 dark:border-slate-700/60 ${lastInGroup ? "rounded-bl-md" : ""}`
+                    }`}
+                    title={new Date(message.createdAt).toLocaleString("vi-VN")}
+                >
+                    {message.content}
+                </div>
+                {lastInGroup && (
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5 px-1">
+                        {time}
+                        {mine && (seen ? <CheckCheck size={12} className="text-blue-500" /> : <Check size={12} />)}
+                        {seen && <span>Đã xem</span>}
+                    </span>
+                )}
             </div>
-            <span className="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5 px-1">
-                {time}
-                {mine && (seen ? <CheckCheck size={12} className="text-blue-500" /> : <Check size={12} />)}
-                {seen && <span>Đã xem</span>}
-            </span>
         </div>
     );
 }
