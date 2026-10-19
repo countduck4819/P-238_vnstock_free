@@ -48,7 +48,7 @@ graph TB
 - Chạy cổng `6060`, cung cấp market data và artifact advisory cho NestJS và cho
   trình duyệt qua đường dẫn cùng origin `/python_api/*` (Next.js rewrite khi dev,
   nginx khi production).
-- Dữ liệu thị trường lấy từ vnstock bản free (nguồn KBS/VCI) qua một client duy
+- Dữ liệu thị trường lấy từ vnstock bản Cộng đồng, thế hệ 5 (nguồn KBS/VCI) qua một client duy
   nhất `python_data/core/vnstock_client.py`, tự chuyển nguồn khi một nguồn lỗi.
 - Endpoint advisory: `/api/wave-h120/latest`, `/api/wave-h120/<symbol>`,
   `/api/wave-v6/latest`, `/api/wave-v6/<symbol>`.

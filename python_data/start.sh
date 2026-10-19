@@ -1,18 +1,19 @@
 #!/bin/sh
-# Khởi động python_data với vnstock bản free mới nhất.
+# Khởi động python_data với vnstock bản Cộng đồng mới nhất.
 set -e
 
 if [ "${VNSTOCK_AUTO_UPGRADE:-1}" != "0" ]; then
-    echo "Kiểm tra bản vnstock free mới nhất..."
+    echo "Kiểm tra bản vnstock mới nhất..."
     pip install --no-cache-dir --upgrade \
+        --extra-index-url https://vnstocks.com/api/packages \
         --extra-index-url https://vnstocks.com/api/simple \
-        vnstock vnai \
+        vnstock \
         || echo "Không nâng cấp được vnstock, dùng bản đã cài."
 fi
 
-# API key miễn phí (bản Community) nâng giới hạn từ 20 lên 60 request/phút.
+# API key miễn phí (bản Cộng đồng) nâng giới hạn từ 20 lên 60 request/phút.
 if [ -n "${VNSTOCK_API_KEY:-}" ]; then
-    python -c "import os, vnstock; vnstock.change_api_key(os.environ['VNSTOCK_API_KEY'])" \
+    python register_api_key.py \
         || echo "Không đăng ký được VNSTOCK_API_KEY, chạy ở chế độ khách."
 fi
 

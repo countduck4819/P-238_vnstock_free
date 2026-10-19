@@ -1,11 +1,12 @@
-# vnstock bản free (community). Từ 2026 vnstock phát hành qua chỉ mục gói của
-# vnstocks.com (bản trên PyPI đang bị khóa), nên cần thêm extra index.
+# vnstock bản Cộng đồng (miễn phí). Thế hệ 5 (lõi Rust) phát hành qua kho gói
+# api/packages của vnstocks.com; api/simple giữ làm dự phòng cho bản 4.x.
+# Bản trên PyPI đang bị khóa nên cần extra index.
+--extra-index-url https://vnstocks.com/api/packages
 --extra-index-url https://vnstocks.com/api/simple
 
 flask>=3.0
 flask-cors>=4.0
 pandas>=2.2
 schedule==1.2.0
+# pip chọn bản mới nhất có trên các index (thế hệ 5 nếu tải được).
 vnstock>=4.0.9
-# vnai 2.6.2+ không còn tự ghi chỉ dẫn vào AGENTS.md khi import vnstock.
-vnai>=2.6.2

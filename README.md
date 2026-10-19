@@ -77,14 +77,18 @@ python -m pip install -r requirements.txt
 python -m pip install -e ".[dev]"
 ```
 
-Data service (`python_data/`) dùng **vnstock bản free** (>= 4.0.9, nguồn KBS/VCI),
+Data service (`python_data/`) dùng **vnstock bản Cộng đồng miễn phí**, ưu tiên thế hệ 5
+(lõi Rust, phát hành qua `https://vnstocks.com/api/packages`) và tự lùi về 4.0.9 nếu
+không tải được; nguồn dữ liệu KBS/VCI,
 không còn dùng gói trả phí `vnstock_data`. Cài từ index của vnstocks.com:
 
 ```powershell
 python -m pip install -r python_data/requirements.txt
 ```
 
-`python_data/requirements.txt` đã khai báo `--extra-index-url https://vnstocks.com/api/simple`.
+`python_data/requirements.txt` đã khai báo hai extra index `api/packages` (thế hệ 5) và
+`api/simple` (4.x). Thế hệ 5 giữ các lớp tương thích `Quote`, `Listing`, `Company`,
+`Finance` mà `vnstock_client.py` dùng, và không cần cài `vnai`.
 Mọi lời gọi vnstock đi qua `python_data/core/vnstock_client.py` (tự đổi nguồn khi
 một nguồn lỗi, cache dữ liệu tham chiếu). API key miễn phí (`VNSTOCK_API_KEY`) nâng
 giới hạn từ 20 lên 60 request/phút; để trống thì chạy chế độ khách.
@@ -370,7 +374,8 @@ docker compose up --build
 ```
 
 `python_data` chạy `start.sh`: nếu `VNSTOCK_AUTO_UPGRADE=1` (mặc định) thì tự nâng
-vnstock/vnai lên bản free mới nhất, nếu có `VNSTOCK_API_KEY` thì đăng ký key, rồi
+vnstock lên bản Cộng đồng mới nhất (thế hệ 5), nếu có `VNSTOCK_API_KEY` thì đăng ký key
+(`register_api_key.py`), rồi
 chạy `server.py`. Cấu hình vnstock được giữ trong volume `vnstock_home`.
 Healthcheck của `python_data` chỉ kiểm tra `/api/health`, nên `api`/`web` vẫn khởi
 động khi `runs/` chưa có kết quả H120/V6 (các route `wave-*` trả 503 cho tới khi
