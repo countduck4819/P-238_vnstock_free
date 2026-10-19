@@ -291,7 +291,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Cột phải cao bằng cột tin tức nên khối này bám theo khi cuộn bảng tin */}
-                        <div className="sticky top-20">
+                        <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto no-scrollbar rounded-2xl">
                             <CommunityPostsWidget />
                         </div>
                     </div>
