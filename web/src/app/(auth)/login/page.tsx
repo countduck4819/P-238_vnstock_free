@@ -65,17 +65,17 @@ export default function Login() {
     const loading = form.formState.isSubmitting;
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9F5FF] to-[#F3E8FF] p-6">
-            <div className="w-full max-w-md relative overflow-hidden rounded-2xl bg-white/70 backdrop-blur-xl border border-[#E0CCFF] shadow-[0_10px_30px_rgba(147,51,234,0.1)] animate-fadeIn">
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9F5FF] to-[#F3E8FF] dark:from-slate-950 dark:to-indigo-950/60 p-6">
+            <div className="w-full max-w-md relative overflow-hidden rounded-2xl bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-[#E0CCFF] dark:border-slate-700 shadow-[0_10px_30px_rgba(147,51,234,0.1)] animate-fadeIn">
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute -top-32 left-20 w-72 h-72 bg-[#C084FC]/40 blur-3xl rounded-full animate-pulse"></div>
                     <div className="absolute -bottom-32 right-20 w-72 h-72 bg-[#7C3AED]/30 blur-3xl rounded-full animate-pulse delay-300"></div>
                 </div>
                 <div className="relative z-10 p-8">
-                    <h1 className="text-2xl font-bold text-center text-[#7C3AED] mb-1">
+                    <h1 className="text-2xl font-bold text-center text-[#7C3AED] dark:text-violet-400 mb-1">
                         Đăng nhập FinSight
                     </h1>
-                    <p className="text-center text-gray-600 text-sm mb-6">
+                    <p className="text-center text-gray-600 dark:text-slate-400 text-sm mb-6">
                         Nền tảng phân tích, công cụ đầu tư chứng khoán trên máy
                         tính
                     </p>
@@ -109,7 +109,7 @@ export default function Login() {
 
                             <div className="relative flex items-center justify-center">
                                 <span className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#E0CCFF] to-transparent"></span>
-                                <span className="relative bg-white/80 px-3 text-sm text-gray-500">
+                                <span className="relative bg-white/80 dark:bg-slate-900 px-3 text-sm text-gray-500 dark:text-slate-400">
                                     hoặc
                                 </span>
                             </div>
@@ -134,11 +134,11 @@ export default function Login() {
                         </form>
                     </Form>
 
-                    <p className="text-center text-sm text-gray-500 mt-6">
+                    <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-6">
                         Chưa có tài khoản?{" "}
                         <Link
                             href="/register"
-                            className="text-[#7C3AED] font-medium hover:underline"
+                            className="text-[#7C3AED] dark:text-violet-400 font-medium hover:underline"
                         >
                             Đăng ký ngay
                         </Link>
@@ -164,7 +164,7 @@ function SocialLoginButton({
             href={href}
             className={cn(
                 "w-12 h-12 flex items-center justify-center gap-2 rounded-full ",
-                "border border-[#E0CCFF] bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-[0_0_12px_rgba(147,51,234,0.15)] hover:scale-[1.03]",
+                "border border-[#E0CCFF] dark:border-slate-700 bg-white/80 dark:bg-slate-800 backdrop-blur-sm shadow-sm hover:shadow-[0_0_12px_rgba(147,51,234,0.15)] hover:scale-[1.03]",
                 variant === "google"
                     ? "text-[#DB4437] hover:bg-[#FDE8E6]"
                     : "text-[#1877F2] hover:bg-[#E9F0FF]"

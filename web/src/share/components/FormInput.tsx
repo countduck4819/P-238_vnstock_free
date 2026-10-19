@@ -34,7 +34,7 @@ export function FormInput<T extends FieldValues>({
             render={({ field }) => (
                 <FormItem className="space-y-1.5">
                     {label && (
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-700 dark:text-slate-300">
                             {label}
                         </FormLabel>
                     )}
@@ -43,8 +43,8 @@ export function FormInput<T extends FieldValues>({
                         type={type}
                         placeholder={placeholder}
                         className={cn(
-                            "h-11 w-full rounded-xl border border-[#E0CCFF] bg-white/70 backdrop-blur-sm",
-                            "px-4 text-[15px] text-gray-800 placeholder:text-gray-400 shadow-[0_2px_6px_rgba(147,51,234,0.08)]",
+                            "h-11 w-full rounded-xl border border-[#E0CCFF] dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm",
+                            "px-4 text-[15px] text-gray-800 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 shadow-[0_2px_6px_rgba(147,51,234,0.08)]",
                             "hover:border-[#C084FC]",
                             "focus-visible:outline-none focus-visible:ring-0 focus-visible:border-[#9333EA] focus-visible:shadow-[0_0_0_3px_rgba(147,51,234,0.25)]",
                             "transition-all duration-300",

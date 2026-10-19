@@ -40,7 +40,7 @@ export function FormSelect<T extends FieldValues>({
             render={({ field }) => (
                 <FormItem className="space-y-1.5">
                     {label && (
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-700 dark:text-slate-300">
                             {label}
                         </FormLabel>
                     )}
@@ -48,8 +48,8 @@ export function FormSelect<T extends FieldValues>({
                     <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger
                             className={cn(
-                                "flex h-11 w-full items-center justify-between rounded-xl border border-[#E0CCFF] bg-white/70",
-                                "backdrop-blur-sm px-4 text-[15px] text-gray-800",
+                                "flex h-11 w-full items-center justify-between rounded-xl border border-[#E0CCFF] dark:border-slate-700 bg-white/70 dark:bg-slate-800/70",
+                                "backdrop-blur-sm px-4 text-[15px] text-gray-800 dark:text-slate-100",
                                 "shadow-[0_2px_6px_rgba(147,51,234,0.08)] transition-all duration-300",
                                 "hover:border-[#C084FC] focus-visible:border-[#9333EA] focus-visible:shadow-[0_0_0_3px_rgba(147,51,234,0.25)]",
                                 "focus-visible:outline-none focus-visible:ring-0",
@@ -65,7 +65,7 @@ export function FormSelect<T extends FieldValues>({
 
                         <SelectContent
                             className={cn(
-                                "rounded-xl border border-[#EADFFF] bg-white/95",
+                                "rounded-xl border border-[#EADFFF] dark:border-slate-700 bg-white/95 dark:bg-slate-900/95",
                                 "shadow-[0_4px_18px_rgba(147,51,234,0.15)] backdrop-blur-sm",
                                 "overflow-hidden animate-fadeIn"
                             )}
@@ -75,7 +75,7 @@ export function FormSelect<T extends FieldValues>({
                                     key={opt.value}
                                     value={opt.value}
                                     className={cn(
-                                        "cursor-pointer px-4 py-2.5 text-[15px] text-gray-700 transition-all",
+                                        "cursor-pointer px-4 py-2.5 text-[15px] text-gray-700 dark:text-slate-200 transition-all",
                                         "hover:bg-[#F5E8FF] hover:text-[#6B21A8]",
                                         "focus:bg-[#EADFFF] focus:text-[#6B21A8]",
                                         "data-[state=checked]:bg-[#EADFFF] data-[state=checked]:text-[#6B21A8]"

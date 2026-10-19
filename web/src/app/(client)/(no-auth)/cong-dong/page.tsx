@@ -450,7 +450,7 @@ export default function CommunityPage() {
                     </div>
 
                     {/* MIDDLE COLUMN: Post Composer + Feed (col-span-6 on Desktop) */}
-                    <div className="lg:col-span-6 space-y-4">
+                    <div className="lg:col-span-6 min-w-0 space-y-4">
                         {/* Search Box on Mobile/Tablet */}
                         <div className="relative">
                             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -699,10 +699,10 @@ export default function CommunityPage() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                                                            {post.authorRole && <span>{post.authorRole}</span>}
-                                                            <span>•</span>
-                                                            <span>{formatRelativeTime(post.createdAt)}</span>
+                                                        <div className="flex items-center flex-wrap gap-x-2 text-xs text-slate-400 mt-0.5">
+                                                            {post.authorRole && <span className="truncate">{post.authorRole}</span>}
+                                                            {post.authorRole && <span>•</span>}
+                                                            <span className="whitespace-nowrap">{formatRelativeTime(post.createdAt)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -720,7 +720,7 @@ export default function CommunityPage() {
                                                             </Link>
                                                             {post.stance && (
                                                                 <span
-                                                                    className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
+                                                                    className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded whitespace-nowrap ${
                                                                         post.stance === "BUY"
                                                                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                                                             : post.stance === "SELL"
@@ -768,13 +768,13 @@ export default function CommunityPage() {
 
                                             {/* Post Title */}
                                             {post.title && (
-                                                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2 leading-snug">
+                                                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2 leading-snug wrap-anywhere">
                                                     {post.title}
                                                 </h3>
                                             )}
 
                                             {/* Post Content */}
-                                            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line mb-3">
+                                            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line wrap-anywhere mb-3">
                                                 {post.content}
                                             </p>
 
@@ -801,16 +801,7 @@ export default function CommunityPage() {
                                             )}
 
                                             {/* Attached Image if any */}
-                                            {post.imageUrl && (
-                                                <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-3.5 border border-slate-200 dark:border-slate-800">
-                                                    <Image
-                                                        src={post.imageUrl}
-                                                        alt="Chart"
-                                                        fill
-                                                        className="object-cover hover:scale-102 transition-transform duration-300"
-                                                    />
-                                                </div>
-                                            )}
+                                            {post.imageUrl && <PostImage src={post.imageUrl} />}
 
                                             {/* Post Footer Action Bar */}
                                             <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
@@ -888,8 +879,8 @@ export default function CommunityPage() {
                                                                         size={28}
                                                                     />
                                                                     <div className="flex-1 min-w-0">
-                                                                        <div className="flex items-center justify-between mb-0.5">
-                                                                            <span className="font-bold text-slate-900 dark:text-slate-100">
+                                                                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                                            <span className="font-bold text-slate-900 dark:text-slate-100 truncate">
                                                                                 {cmt.authorName}
                                                                             </span>
                                                                             <span className="flex items-center gap-1.5 text-[10px] text-slate-400">
@@ -906,7 +897,7 @@ export default function CommunityPage() {
                                                                                 )}
                                                                             </span>
                                                                         </div>
-                                                                        <p className="text-slate-700 dark:text-slate-300">
+                                                                        <p className="text-slate-700 dark:text-slate-300 whitespace-pre-line wrap-anywhere">
                                                                             {cmt.content}
                                                                         </p>
                                                                     </div>
@@ -957,7 +948,7 @@ export default function CommunityPage() {
                     </div>
 
                     {/* RIGHT COLUMN: Market Poll + Trending Tickers + Leaderboard (col-span-3 on Desktop) */}
-                    <div className="lg:col-span-3 space-y-4 sticky top-20">
+                    <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-20">
                         {/* 1. Market Sentiment Poll */}
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm">
                             <div className="flex items-center justify-between mb-2.5">
@@ -1154,5 +1145,23 @@ function BuildingIcon({ size = 16, className }: { size?: number; className?: str
             <path d="M8 10h.01" />
             <path d="M8 14h.01" />
         </svg>
+    );
+}
+
+// Ảnh đính kèm bài viết: ẩn hẳn khung nếu link ảnh hỏng thay vì để một ô trống.
+function PostImage({ src }: { src: string }) {
+    const [failed, setFailed] = useState(false);
+    if (failed) return null;
+
+    return (
+        <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-3.5 border border-slate-200 dark:border-slate-800">
+            <Image
+                src={src}
+                alt="Chart"
+                fill
+                onError={() => setFailed(true)}
+                className="object-cover hover:scale-102 transition-transform duration-300"
+            />
+        </div>
     );
 }

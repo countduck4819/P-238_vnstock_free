@@ -170,6 +170,7 @@ export default function NewsDetailPage() {
         );
     }
 
+    const hasChange = typeof detail.change_percent === "number";
     const changePercent = detail.change_percent || 0;
 
     const isUp = changePercent > 0;
@@ -221,25 +222,27 @@ export default function NewsDetailPage() {
                 )}
             </div>
 
-            {/* Mã cổ phiếu */}
-            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 mb-6">
-                <span className="mr-2 text-blue-600 dark:text-blue-400">{detail.symbol}</span>
+            {/* Mã cổ phiếu (ẩn % khi chưa có dữ liệu giá thay vì hiện 0%) */}
+            {detail.symbol && (
+                <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 mb-6">
+                    <span className="mr-2 text-blue-600 dark:text-blue-400">{detail.symbol}</span>
 
-                {isUp && (
-                    <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />+{changePercent}%
-                    </span>
-                )}
+                    {isUp && (
+                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3" />+{changePercent}%
+                        </span>
+                    )}
 
-                {isDown && (
-                    <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                        <TrendingDown className="w-3 h-3" />
-                        {changePercent}%
-                    </span>
-                )}
+                    {isDown && (
+                        <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                            <TrendingDown className="w-3 h-3" />
+                            {changePercent}%
+                        </span>
+                    )}
 
-                {!isUp && !isDown && <span className="text-slate-500 dark:text-slate-400">0%</span>}
-            </div>
+                    {hasChange && !isUp && !isDown && <span className="text-slate-500 dark:text-slate-400">0%</span>}
+                </div>
+            )}
 
             {/* Ảnh đại diện */}
             {detail.news_image_url && (

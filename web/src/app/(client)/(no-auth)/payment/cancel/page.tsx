@@ -6,19 +6,19 @@ import Link from "next/link";
 
 export default function PaymentCancel() {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff5f5] to-[#ffeaea] px-6">
+        <div className="min-h-[calc(100dvh-4.6rem)] flex flex-col items-center justify-center bg-gradient-to-b from-[#fff5f5] to-[#ffeaea] dark:from-slate-950 dark:to-rose-950/30 px-6">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
                 className="text-center"
             >
-                <XCircle className="w-20 h-20 text-red-600 mx-auto mb-6" />
+                <XCircle className="w-20 h-20 text-red-600 dark:text-red-400 mx-auto mb-6" />
 
-                <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
                     Thanh toán bị hủy
                 </h1>
-                <p className="text-gray-600 text-lg max-w-md mx-auto">
+                <p className="text-gray-600 dark:text-slate-300 text-lg max-w-md mx-auto">
                     Giao dịch chưa hoàn tất. Bạn có thể thử lại bất cứ lúc nào.
                 </p>
 

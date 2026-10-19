@@ -84,8 +84,8 @@ export default function Register() {
     const loading = form.formState.isSubmitting;
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9F5FF] to-[#F3E8FF] p-6">
-            <div className="w-full max-w-md relative overflow-hidden rounded-2xl bg-white/70 backdrop-blur-xl border border-[#E0CCFF] shadow-[0_10px_30px_rgba(147,51,234,0.1)] animate-fadeIn">
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9F5FF] to-[#F3E8FF] dark:from-slate-950 dark:to-indigo-950/60 p-6">
+            <div className="w-full max-w-md relative overflow-hidden rounded-2xl bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-[#E0CCFF] dark:border-slate-700 shadow-[0_10px_30px_rgba(147,51,234,0.1)] animate-fadeIn">
                 {/* background blur */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute -top-32 left-10 w-72 h-72 bg-[#C084FC]/40 blur-3xl rounded-full animate-pulse"></div>
@@ -93,11 +93,11 @@ export default function Register() {
                 </div>
 
                 <div className="relative z-10 p-8">
-                    <h1 className="text-2xl font-bold text-center text-[#7C3AED] mb-1">
+                    <h1 className="text-2xl font-bold text-center text-[#7C3AED] dark:text-violet-400 mb-1">
                         Đăng ký tài khoản
                     </h1>
 
-                    <p className="text-center text-gray-600 text-sm mb-6">
+                    <p className="text-center text-gray-600 dark:text-slate-400 text-sm mb-6">
                         Tham gia FinSight để sử dụng toàn bộ tính năng phân tích
                     </p>
 
@@ -176,11 +176,11 @@ export default function Register() {
 
                             <FormButton label="Đăng ký" loading={loading} />
 
-                            <p className="text-center text-sm text-gray-500 mt-4">
+                            <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-4">
                                 Đã có tài khoản?{" "}
                                 <Link
                                     href="/login"
-                                    className="text-[#7C3AED] font-medium hover:underline"
+                                    className="text-[#7C3AED] dark:text-violet-400 font-medium hover:underline"
                                 >
                                     Đăng nhập ngay
                                 </Link>

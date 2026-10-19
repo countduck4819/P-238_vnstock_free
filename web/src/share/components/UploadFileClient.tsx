@@ -49,7 +49,7 @@ export function UploadFileClient({
     return (
         <div className="w-full space-y-2">
             {label && (
-                <p className="text-sm font-medium text-gray-700">{label}</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-slate-300">{label}</p>
             )}
 
             <label className="
@@ -57,11 +57,11 @@ export function UploadFileClient({
                 flex flex-col items-center justify-center 
                 w-full h-40 
                 rounded-xl cursor-pointer 
-                border border-[#E0CCFF] bg-white/70 backdrop-blur-sm
+                border border-[#E0CCFF] dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm
                 shadow-sm
                 transition 
                 hover:shadow-[0_0_12px_rgba(147,51,234,0.18)]
-                hover:bg-white/90
+                hover:bg-white/90 dark:hover:bg-slate-800
             ">
                 <input
                     type="file"
@@ -92,7 +92,7 @@ export function UploadFileClient({
                         "
                     />
                 ) : (
-                    <div className="flex flex-col items-center text-gray-500">
+                    <div className="flex flex-col items-center text-gray-500 dark:text-slate-400">
                         <div className="
                             w-12 h-12 rounded-full 
                             bg-[#E0CCFF]/40 

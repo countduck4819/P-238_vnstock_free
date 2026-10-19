@@ -48,7 +48,7 @@ export default function SettingsPage() {
                             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Chế độ sáng / tối</p>
                             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Sử dụng nút chuyển giao diện trên thanh điều hướng.</p>
                         </div>
-                        <span className="ml-3 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-300">TỰ ĐỘNG LƯU</span>
+                        <span className="ml-3 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[10px] font-bold whitespace-nowrap shrink-0 text-indigo-600 dark:text-indigo-300">TỰ ĐỘNG LƯU</span>
                     </div>
                 </SettingsCard>
 

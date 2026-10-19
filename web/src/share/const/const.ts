@@ -12,6 +12,7 @@ export const publicRouters: string[] = [
     "/ve-chung-toi",
     "/landing",
     "/cong-dong",
+    "/thi-truong",
     "/profile",
     "/settings",
 ];

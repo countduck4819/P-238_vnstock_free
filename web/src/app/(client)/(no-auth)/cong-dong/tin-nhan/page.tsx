@@ -84,7 +84,7 @@ function Messenger() {
                     <ConnectionBadge connected={connected} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-[calc(100vh-8.5rem)] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-[calc(100dvh-8.5rem)] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
                     <aside className={`${active ? "hidden md:flex" : "flex"} flex-col border-r border-slate-200/80 dark:border-slate-800 min-h-0`}>
                         <ConversationSidebar
                             conversations={conversations}
@@ -408,7 +408,8 @@ function ConversationThread({
                             handleSend();
                         }
                     }}
-                    placeholder="Nhập tin nhắn... (Enter để gửi, Shift+Enter xuống dòng)"
+                    placeholder="Nhập tin nhắn..."
+                    title="Enter để gửi, Shift+Enter để xuống dòng"
                     className="flex-1 resize-none max-h-32 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 />
                 <button

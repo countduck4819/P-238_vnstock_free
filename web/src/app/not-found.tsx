@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function NotFound() {
     return (
-        <section className="relative flex flex-col items-center justify-center min-h-[70vh] py-16 overflow-hidden bg-gradient-to-b from-[#F5F3FF] via-[#EDE9FE] to-[#E0E7FF] dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-gray-800 dark:text-slate-100 transition-colors">
+        <section className="relative flex flex-col items-center justify-center min-h-dvh py-16 overflow-hidden bg-gradient-to-b from-[#F5F3FF] via-[#EDE9FE] to-[#E0E7FF] dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-gray-800 dark:text-slate-100 transition-colors">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(147,51,234,0.12),transparent_70%)]" />
 
             <motion.h1

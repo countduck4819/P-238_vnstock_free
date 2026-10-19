@@ -7,6 +7,7 @@ import RightPanel from "./RightPanel";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { RefreshCw, Layers, CheckCircle2 } from "lucide-react";
 import { pythonApiUrl } from "@/utils/pythonApi";
 
@@ -156,6 +157,8 @@ export default function MarketHeatmap() {
     const [navigatingSymbol, setNavigatingSymbol] = useState<string | null>(null);
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme === "dark";
+    // Trên điện thoại ô cổ phiếu rất nhỏ: thu nhỏ chữ để mã và % không tràn ra ngoài ô.
+    const isMobile = useIsMobile();
 
     const allSymbols = useMemo(
         () => Array.from(new Set(SECTORS.flatMap((s) => s.stocks))),
@@ -438,18 +441,18 @@ export default function MarketHeatmap() {
                                 overflow: "hidden",
                                 rich: {
                                     ticker: {
-                                        fontSize: 14,
+                                        fontSize: isMobile ? 11 : 14,
                                         fontWeight: "bold",
                                         color: "#ffffff",
                                         align: "center",
-                                        lineHeight: 18,
+                                        lineHeight: isMobile ? 14 : 18,
                                     },
                                     change: {
-                                        fontSize: 11,
+                                        fontSize: isMobile ? 9 : 11,
                                         fontWeight: "bold",
                                         color: "rgba(255, 255, 255, 0.95)",
                                         align: "center",
-                                        lineHeight: 14,
+                                        lineHeight: isMobile ? 11 : 14,
                                     },
                                 },
                                 formatter: (params: any) => {
@@ -470,7 +473,7 @@ export default function MarketHeatmap() {
                 },
             ],
         };
-    }, [filteredData, isDark]);
+    }, [filteredData, isDark, isMobile]);
 
     return (
         <div className="min-h-screen lg:h-[calc(100vh-4.6rem)] lg:min-h-0 lg:overflow-hidden bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors flex flex-col">
