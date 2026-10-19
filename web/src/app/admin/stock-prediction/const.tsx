@@ -24,11 +24,13 @@ export const stockPredictionColumns: Column<StockPrediction>[] = [
     {
         key: "lastClosePrice",
         header: "Giá đóng gần nhất",
+        className: "w-32 whitespace-normal",
         render: (item) => formatPrice(item.lastClosePrice),
     },
     {
         key: "predictedPrice",
         header: "Giá dự đoán",
+        className: "w-32 whitespace-normal",
         render: (item) => formatPrice(item.predictedPrice),
     },
     {

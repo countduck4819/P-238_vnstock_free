@@ -6,6 +6,7 @@ import { NewsController } from './news.controller';
 
 import { DATA_SOURCE, NewsRepository, NewsServiceToken } from 'src/shared';
 import { NewsService } from './news.service';
+import { NewsSyncService } from './news-sync.service';
 
 @Module({
   imports: [DatabaseModule],
@@ -21,6 +22,7 @@ import { NewsService } from './news.service';
       provide: NewsServiceToken,
       useClass: NewsService,
     },
+    NewsSyncService,
   ],
   exports: [NewsRepository, NewsServiceToken],
 })

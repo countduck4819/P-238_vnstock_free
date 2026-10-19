@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -317,6 +317,19 @@ export default function CommunityPage() {
             return true;
         });
     }, [posts, activeTab, selectedSector, searchKeyword]);
+
+    // Link /cong-dong#<id> (nút Chia sẻ, bài đăng ở trang chủ): bài tải bất đồng bộ
+    // nên trình duyệt không tự cuộn tới được, phải cuộn khi bài đã hiện ra.
+    const scrolledToHashRef = useRef(false);
+    useEffect(() => {
+        if (scrolledToHashRef.current) return;
+        const id = decodeURIComponent(window.location.hash.slice(1));
+        const target = id ? document.getElementById(id) : null;
+        if (target) {
+            scrolledToHashRef.current = true;
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [filteredPosts]);
 
     const totalPollCount = pollVotes.bull + pollVotes.bear + pollVotes.sideway;
     const bullPercent = Math.round((pollVotes.bull / totalPollCount) * 100);
@@ -667,7 +680,7 @@ export default function CommunityPage() {
                                         <article
                                             key={post.id}
                                             id={post.id}
-                                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200"
+                                            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 scroll-mt-24 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200"
                                         >
                                             {/* Post Header: Author + Badges */}
                                             <div className="flex items-start justify-between gap-3 mb-3">

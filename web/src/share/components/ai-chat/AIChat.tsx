@@ -377,10 +377,11 @@ export default function AIChat() {
                         onDrop={handleDrop}
                         className={cn(
                             "ai-chat-window fixed z-[99999] flex flex-col overflow-hidden transition-all duration-300 pointer-events-auto",
-                            "bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-neutral-200/90 dark:border-slate-800",
+                            // Điện thoại: phủ kín màn hình như app chat; từ sm trở lên mới là khung nổi.
+                            "bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl sm:rounded-2xl shadow-2xl sm:border border-neutral-200/90 dark:border-slate-800",
                             isExpanded
-                                ? "inset-2 sm:inset-10 w-auto h-auto max-w-[55rem] mx-auto"
-                                : "inset-x-2 bottom-16 top-16 sm:inset-auto sm:right-[1.5rem] sm:bottom-[5.5rem] md:right-[3rem] md:bottom-[6.5rem] w-auto sm:w-[28rem] xl:w-[35rem] h-auto sm:h-[38rem] max-h-[90vh] sm:max-h-[85vh]",
+                                ? "inset-0 sm:inset-10 w-auto h-auto max-w-[55rem] mx-auto"
+                                : "inset-0 sm:inset-auto sm:right-[1.5rem] sm:bottom-[5.5rem] md:right-[3rem] md:bottom-[6.5rem] w-auto sm:w-[28rem] xl:w-[35rem] h-dvh sm:h-[38rem] sm:max-h-[85vh]",
                             isDragging && "border-2 border-dashed border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40"
                         )}
                     >

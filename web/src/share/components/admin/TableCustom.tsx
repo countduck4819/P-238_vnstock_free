@@ -214,10 +214,13 @@ import { Loader2, Inbox, Plus } from "lucide-react";
 import { TableSearch } from "./TableSearch";
 import { TablePagination } from "./TablePagination";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export interface Column<T> {
     key: keyof T | "actions";
     header: string;
+    /** Class thêm cho cả ô tiêu đề và ô dữ liệu của cột (độ rộng, căn lề...). */
+    className?: string;
     render?: (
         item: T,
         actions?: {
@@ -333,7 +336,7 @@ export function TableCustom<T>({
                             {columns.map((col) => (
                                 <TableHead
                                     key={String(col.key)}
-                                    className="text-white font-semibold py-3 px-4 text-sm tracking-wide uppercase"
+                                    className={cn("text-white font-semibold py-3 px-4 text-sm tracking-wide uppercase", col.className)}
                                 >
                                     {col.header}
                                 </TableHead>
@@ -355,7 +358,7 @@ export function TableCustom<T>({
                                     {columns.map((col) => (
                                         <TableCell
                                             key={String(col.key)}
-                                            className="text-gray-100 text-sm py-3 px-4"
+                                            className={cn("text-gray-100 text-sm py-3 px-4", col.className)}
                                         >
                                             {col.render
                                                 ? col.render(item, {

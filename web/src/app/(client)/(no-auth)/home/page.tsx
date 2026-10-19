@@ -2,6 +2,8 @@
 
 import LeftSidebar from "@/share/components/home/LeftSidebar";
 import StockRecommendationTabs from "@/share/components/home/StockRecommendationTabs";
+import MarketNewsFeed from "@/share/components/home/MarketNewsFeed";
+import CommunityPostsWidget from "@/share/components/home/CommunityPostsWidget";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/auth/AuthProvider";
@@ -174,10 +176,17 @@ export default function HomePage() {
                         <LeftSidebar onPickSymbol={(sym) => setCurrent(sym)} currentSymbol={current} />
 
                         <StockRecommendationTabs />
+
+                        {/* Trên điện thoại cột phải bị ẩn nên bài đăng cộng đồng nằm trên bảng tin */}
+                        <div className="lg:hidden">
+                            <CommunityPostsWidget limit={3} />
+                        </div>
+
+                        <MarketNewsFeed />
                     </div>
 
-                    {/* RIGHT COLUMN (Visible on Desktop as sticky overview sidebar) */}
-                    <div className="hidden lg:block w-full space-y-4 lg:sticky lg:top-20">
+                    {/* RIGHT COLUMN (Desktop): biểu đồ, chỉ số, bài đăng cộng đồng */}
+                    <div className="hidden lg:block w-full space-y-4 lg:self-stretch">
                         {/* 1. BIỂU ĐỒ KỸ THUẬT (Only shown for Free users as a preview; Premium has the main chart in Software tab) */}
                         {!isPremium && (
                             <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden transition-all">
@@ -279,6 +288,11 @@ export default function HomePage() {
                                     );
                                 })}
                             </div>
+                        </div>
+
+                        {/* Cột phải cao bằng cột tin tức nên khối này bám theo khi cuộn bảng tin */}
+                        <div className="sticky top-20">
+                            <CommunityPostsWidget />
                         </div>
                     </div>
                 </section>

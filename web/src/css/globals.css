@@ -188,3 +188,10 @@ html {
     scroll-behavior: smooth;
     scrollbar-color: #6a5af9 transparent;
 }
+/* Cuộn được nhưng ẩn thanh cuộn (thanh lọc ngang, cột phải trang chủ...). */
+@utility no-scrollbar {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}

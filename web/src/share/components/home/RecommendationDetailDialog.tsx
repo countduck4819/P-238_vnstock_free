@@ -97,7 +97,7 @@ export default function RecommendationDetailDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 showCloseButton={false}
-                className="w-[98vw] max-w-[1550px] 2xl:max-w-[1700px] max-h-[94vh] p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl flex flex-col"
+                className="w-[98vw] max-w-[1550px] sm:max-w-[1550px] 2xl:max-w-[1700px] max-h-[94vh] p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl flex flex-col"
             >
                 {/* HEADER BAR */}
                 <DialogHeader className="px-5 sm:px-7 py-3.5 sm:py-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/95 backdrop-blur-md shrink-0 pr-12 sm:pr-14">

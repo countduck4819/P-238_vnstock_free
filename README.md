@@ -302,6 +302,11 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/industries/vnstock"
 Invoke-RestMethod -Uri "http://localhost:8000/api/news?page=1&limit=10&symbol=FPT"
 ```
 
+Bảng tin ở trang chủ đọc `GET /api/news` (mọi mã, cuộn tới đâu tải tới đó). `api`
+tự lấy tin vnstock vào database lúc khởi động và mỗi 30 phút cho rổ VN30 cộng các mã
+đang được khuyến nghị; đổi danh sách bằng `NEWS_SYNC_SYMBOLS`, tắt bằng
+`NEWS_SYNC_ENABLED=0`.
+
 Đăng nhập bằng tài khoản đã tồn tại:
 
 ```powershell

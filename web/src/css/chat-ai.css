@@ -5,6 +5,12 @@
     color: #1e1e1e;
 }
 
+@media (max-width: 639px) {
+    .ai-answer {
+        font-size: 0.875rem;
+    }
+}
+
 .ai-answer p {
     margin: 0.5rem 0;
 }

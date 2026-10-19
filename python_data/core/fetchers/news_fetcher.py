@@ -305,7 +305,13 @@ def _vnstock_news_call(symbol, limit):
 
     # Bản free không lọc theo số ngày; giữ đúng cửa sổ NEWS_LOOKBACK_DAYS.
     if df is not None and not df.empty and "publish_time" in df.columns:
-        published = pd.to_datetime(df["publish_time"], errors="coerce")
+        raw_time = df["publish_time"]
+        if pd.api.types.is_numeric_dtype(raw_time):
+            # VCI trả epoch mili-giây; to_datetime mặc định hiểu là nano-giây
+            # nên mọi bài thành năm 1970 và bộ lọc ngày bị vô hiệu.
+            published = pd.to_datetime(raw_time, unit="ms", errors="coerce")
+        else:
+            published = pd.to_datetime(raw_time, errors="coerce")
         cutoff = pd.Timestamp.now() - pd.Timedelta(days=NEWS_LOOKBACK_DAYS)
         recent = df[published.isna() | (published >= cutoff)]
 

@@ -16,7 +16,8 @@ interface StatusBadgeProps {
 }
 
 export const BadgeStatus: React.FC<StatusBadgeProps> = ({ status }) => {
-    if (!status) return null;
+    // ACTIVE/CLOSED không có nhãn riêng: không vẽ một viên trống.
+    if (!status || !(status in statusLabelMap)) return null;
     const label = statusLabelMap[status];
     const color = statusColorMap[status];
 
