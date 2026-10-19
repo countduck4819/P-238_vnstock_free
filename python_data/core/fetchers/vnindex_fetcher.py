@@ -1,19 +1,16 @@
 import traceback
 from datetime import datetime, timedelta
 
-try:
-    from vnstock_data import Market
-except ImportError:
-    from vnstock import Market
+from core import vnstock_client
 
 
 def fetch_vnindex():
     try:
-        market = Market()
         end = datetime.today()
         start = end - timedelta(days=730)
 
-        df = market.index("VNINDEX").ohlcv(
+        df = vnstock_client.index_history(
+            "VNINDEX",
             start=start.strftime("%Y-%m-%d"),
             end=end.strftime("%Y-%m-%d"),
             interval="1D",

@@ -96,28 +96,31 @@ services:
 
     python_data:
         container_name: fireant_python
-        image: python:3.11-slim
-        working_dir: /app/python
+        # vnstock bản free; start.sh tự nâng lên bản mới nhất mỗi lần khởi động.
+        build:
+            context: ./python_data
+        restart: unless-stopped
+        env_file:
+            - .env
         volumes:
-            - ./python_data:/app/python
-            - ./data/:/app/python/data/
+            # Dùng chung data/ với NestJS (news, stocks, listing...).
+            - ./data:/app/data
             # Read-only frozen/current short-term outputs. The scheduler is disabled
             # in this serving container; a separate pipeline worker refreshes it.
             - ./runs:/app/runs:ro
             # Frozen long-term advisory release and prediction artifact.
             - ./deploy:/app/deploy:ro
             - ./reports_wave_v6:/app/reports_wave_v6:ro
-            - fireant_pip_cache:/usr/local/lib/python3.11/site-packages
+            # Lưu cấu hình/API key của vnstock giữa các lần khởi động.
+            - vnstock_home:/root/.vnstock
         ports:
             - "6060:6060"
         dns:
             - 8.8.8.8
             - 1.1.1.1
-        command: bash -c "apt-get update && apt-get install -y ca-certificates && pip install --no-cache-dir -r requirements.txt && python server.py"
         environment:
-            - FLASK_APP=server.py
-            - FLASK_ENV=development
             - TZ=Asia/Ho_Chi_Minh
+            - VNSTOCK_AUTO_UPGRADE=${VNSTOCK_AUTO_UPGRADE:-1}
             - WAVE_H120_RUN_ROOT=/app/runs/wave_h120_shadow
             - WAVE_H120_SHADOW_ENABLED=0
             - WAVE_V6_RELEASE_PATH=/app/deploy/wave_v6_advisory/serving_release.json
@@ -127,7 +130,7 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
-            start_period: 30s
+            start_period: 60s
 
     finsight_api:
         container_name: finsight_api
@@ -184,7 +187,7 @@ services:
             - 1.1.1.1
 
 volumes:
-    fireant_pip_cache:
+    vnstock_home:
     fireant_api_node_modules:
     fireant_web_node_modules:
     qdrant_storage:

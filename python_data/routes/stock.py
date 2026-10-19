@@ -1,5 +1,7 @@
 import json
 import os
+import threading
+import time
 from datetime import datetime
 from flask import Blueprint, jsonify, request
 from core.fetchers import fetch_stock
@@ -69,11 +71,47 @@ def _get_cached_stock_symbols():
 
     return symbols
 
+_overview_refresh_lock = threading.Lock()
+_overview_refreshing = False
+
+
+def _refresh_cached_stocks():
+    """Cập nhật nến của các mã đã cache, chạy nền và tuần tự để giữ quota free."""
+    global _overview_refreshing
+
+    try:
+        today = datetime.today().strftime("%Y-%m-%d")
+
+        for sym in _get_cached_stock_symbols():
+            try:
+                fetch_stock(sym, "2015-01-01", today)
+            except Exception as exc:
+                print(f"⚠️ Không cập nhật được {sym}: {exc}")
+    finally:
+        with _overview_refresh_lock:
+            _overview_refreshing = False
+
+
+def _start_overview_refresh():
+    global _overview_refreshing
+
+    with _overview_refresh_lock:
+        if _overview_refreshing:
+            return
+
+        _overview_refreshing = True
+
+    threading.Thread(
+        target=_refresh_cached_stocks,
+        name="stocks-overview-refresh",
+        daemon=True,
+    ).start()
+
+
 @stock_bp.route("/api/stocks/overview")
 def get_stocks_overview():
-    """Lấy dữ liệu giá và % thay đổi mới nhất trực tiếp từ nến giá chuẩn & vnstock."""
+    """Giá và % thay đổi mới nhất, đọc từ kho nến đã cache."""
     global _overview_cache, _overview_last_fetch
-    import time
     now = time.time()
 
     # Cache 15s trong bộ nhớ để trả lời tức thì trong < 1ms
@@ -81,64 +119,13 @@ def get_stocks_overview():
         return jsonify(_overview_cache)
 
     try:
-        today = datetime.today().strftime("%Y-%m-%d")
-
-        for sym in _get_cached_stock_symbols():
-            try:
-                fetch_stock(
-                    sym,
-                    "2015-01-01",
-                    today,
-                )
-            except Exception as exc:
-                print(f"⚠️ Không cập nhật được {sym}: {exc}")
+        # Cập nhật nến chạy nền: request không phải chờ hàng trăm lượt gọi vnstock.
+        _start_overview_refresh()
 
         # 1. Quét nhanh từ kho nến chuẩn để đảm bảo trùng khớp 100% với trang chi tiết cổ phiếu
         overview = _build_overview_from_candles()
 
-        # 2. Thử cập nhật thêm từ vnstock live snapshot nếu có
-        try:
-            from vnstock import Market
-            df = Market().quote.snapshot()
-            if df is not None and not df.empty:
-                for _, row in df.iterrows():
-                    sym = str(
-                        row.get("ticker")
-                        or row.get("symbol")
-                        or row.get("organ_code")
-                        or ""
-                    ).upper().strip()
-                    if sym and sym not in overview:
-                        price = float(
-                            row.get("match_price")
-                            or row.get("price")
-                            or row.get("close")
-                            or 0
-                        )
-                        change = float(
-                            row.get("percent_change")
-                            or row.get("change_percent")
-                            or row.get("changePercent")
-                            or row.get("pct_change")
-                            or row.get("change")
-                            or 0
-                        )
-                        vol = float(
-                            row.get("match_volume")
-                            or row.get("volume")
-                            or row.get("total_volume")
-                            or 0
-                        )
-                        overview[sym] = {
-                            "price": price,
-                            "change": round(change, 2),
-                            "volume": vol,
-                            "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        }
-        except Exception as snap_err:
-            pass
-
-        # 3. Đảm bảo có chỉ số thị trường cơ sở (VNINDEX, VN30, HNXINDEX, UPINDEX)
+        # 2. Đảm bảo có chỉ số thị trường cơ sở (VNINDEX)
         try:
             from core.fetchers import fetch_vnindex
             if "VNINDEX" not in overview:
@@ -167,4 +154,3 @@ def get_stocks_overview():
         return jsonify({})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
