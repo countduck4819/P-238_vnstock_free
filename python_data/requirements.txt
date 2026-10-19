@@ -10,3 +10,6 @@ pandas>=2.2
 schedule==1.2.0
 # pip chọn bản mới nhất có trên các index (thế hệ 5 nếu tải được).
 vnstock>=4.0.9
+
+# Đọc dự đoán ngắn hạn (predictions.parquet).
+pyarrow>=15.0

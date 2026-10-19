@@ -47,6 +47,29 @@ def test_snapshot_quality_gate_rejects_partial_or_misaligned_data() -> None:
         )
 
 
+def test_snapshot_quality_gate_tolerates_a_bounded_number_of_failed_symbols() -> None:
+    partial = valid_snapshot()
+    partial["failed_symbols"] = 2
+    quality = validate_snapshot_manifest(
+        partial,
+        requested_end="2026-08-24",
+        minimum_coverage=0.95,
+        expected_price_policy="adjusted",
+        max_failed_symbols=30,
+    )
+    assert quality["failed_symbols"] == 2
+
+    partial["failed_symbols"] = 31
+    with pytest.raises(RuntimeError, match="failed symbols"):
+        validate_snapshot_manifest(
+            partial,
+            requested_end="2026-08-24",
+            minimum_coverage=0.95,
+            expected_price_policy="adjusted",
+            max_failed_symbols=30,
+        )
+
+
 def test_effective_as_of_is_last_market_bar_not_download_date(tmp_path: Path) -> None:
     snapshot_dir = tmp_path / "snapshot"
     snapshot_dir.mkdir()
@@ -104,6 +127,23 @@ def test_run_lock_rejects_concurrent_execution(tmp_path: Path) -> None:
             with RunLock(lock_path):
                 pass
     assert not lock_path.exists()
+
+
+def test_run_lock_replaces_a_lock_left_by_a_killed_worker(tmp_path: Path) -> None:
+    lock_path = tmp_path / "shadow.lock"
+    # Owner process no longer exists (container recreated mid-run).
+    lock_path.write_text(json.dumps({"pid": 999_999_999, "identity": "gone:1"}), encoding="utf-8")
+    with RunLock(lock_path):
+        assert json.loads(lock_path.read_text(encoding="utf-8"))["pid"] > 0
+    assert not lock_path.exists()
+
+    # Legacy ``pid=`` lock files fall back to their age.
+    lock_path.write_text("pid=1\n", encoding="ascii")
+    with pytest.raises(RuntimeError, match="already running"):
+        with RunLock(lock_path):
+            pass
+    with RunLock(lock_path, stale_after_seconds=0):
+        pass
 
 
 def test_publish_release_is_atomic_and_preserves_old_release_on_validation_error(

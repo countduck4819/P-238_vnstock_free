@@ -14,18 +14,22 @@ The deployed worker runs once on Vietnamese market weekdays at 19:00
 5. The serving APIs select the newest valid manifest. A failed/tampered run is
    ignored and the preceding verified result remains available.
 
-## Frozen hybrid price-forecast branch
+## Long-term ranking and LSTM price forecasts
 
-Hybrid LSTM/Prophet/Holt forecasts are a separate branch and never retrain in the daily job.
-Its immutable `deploy/price_forecast_lstm/serving_release.json` contains the
-reviewed cohort selected from the long-term ensemble. LSTM returns
-`price_predictions.json` with each cohort symbol's 78-session price path and
-is refreshed only when that cohort is retrained or promoted.
+The long-term branch never runs in the daily job. A new release is published by
+copying the two files produced by the long-term pipeline into
+`predict_xgboost_and_lstm/`:
 
-Only a complete 50-symbol JSON may replace the reviewed prediction artifact and
-`deploy/price_forecast_lstm/daily_release.json`; a failed run leaves the former
-pointer untouched. Charts are generated after all forecasts finish, so a partial
-training run cannot replace web-served images.
+- `ensemble_top50_stocks.json`: the V6 ensemble Top 50 (`symbols[]` with
+  `rank`, `ticker`, `p_ensemble`);
+- `predict_top50_stocks.json`: the 78-session LSTM/Prophet/Holt price path for
+  the same 50 symbols.
+
+NestJS reads both files directly (`/api/wave-v6/latest`) and re-imports the LSTM
+file into the `stock_prediction` table within a few seconds of a change; the
+file must contain exactly 50 symbols or the previous import is kept. No restart
+or release pointer is needed. Python `/api/wave-v6` is only a fallback that
+serves the frozen release in `deploy/wave_v6_advisory/`.
 
 The daily scheduler only runs the short-term branch:
 
@@ -85,16 +89,31 @@ docker compose up -d --build model_scoring
 
 The worker receives the project `.env` and persists the vnstock cache through
 the `data_vnstock` volume. The adapter prefers the sponsor `vnstock_data`
-package when installed and falls back to the public `vnstock` package bundled
-in the image. Configure the provider credentials required by the selected
-vnstock route in `.env` on the deployment host; no credentials are committed
-to the repository. The live path always performs a provider sync (unless the
-explicit replay-only `--skip-sync` option is used).
+package when installed and falls back to the free `vnstock` package bundled in
+the image. On start the worker registers `VNSTOCK_API_KEY` from `.env` (free
+community key, 60 requests/minute); without a key it runs in guest mode and caps
+`WAVE_H120_REQUESTS_PER_MINUTE` at 18, because vnai aborts the process once the
+guest quota of 20/minute is exceeded. No credentials are committed to the
+repository. The live path always performs a provider sync (unless the explicit
+replay-only `--skip-sync` option is used).
 
-The worker writes logs/manifests in `runs/daily_model_scoring/`. It makes at
-most `WAVE_DAILY_SCORING_MAX_ATTEMPTS` automatic attempts per market day and
-waits `WAVE_DAILY_SCORING_RETRY_MINUTES` after a failed job finishes before
-retrying. A successful market date is not scored twice.
+Symbols the provider fails to return are retried once after the full universe
+has been synced. Up to `WAVE_H120_MAX_FAILED_SYMBOLS` (default 30 of ~1,500)
+may still fail, typically delisted tickers; they are left unscored and listed in
+the snapshot manifest. The 95% coverage gate still applies.
+
+A successful run publishes `runs/wave_h120_shadow/serving_release.json`
+(`deploy/` is mounted read-only in the containers). `python_data` serves that
+release, or the newest verified run when the release is absent.
+
+The worker writes logs/manifests in `runs/daily_model_scoring/` and prints one
+line per run, so `docker compose logs -f model_scoring` shows whether the day
+succeeded and, if not, the failing step's log tail. It makes at most
+`WAVE_DAILY_SCORING_MAX_ATTEMPTS` automatic attempts per market day and waits
+`WAVE_DAILY_SCORING_RETRY_MINUTES` after a failed job finishes before retrying.
+A successful market date is not scored twice. A lock left behind by a worker
+that was killed mid-run (for example when `docker compose up` recreates the
+container) is detected and replaced instead of blocking every later run.
 
 
 Daily OHLCV inputs use a bounded rolling history of 480 sessions. The adapter

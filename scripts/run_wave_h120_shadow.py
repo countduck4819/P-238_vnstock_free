@@ -22,23 +22,67 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
-class RunLock:
-    """Small cross-process lock using an exclusive file create."""
+def _process_identity(pid: int) -> str | None:
+    """Return ``boot_id:start_ticks`` for a live Linux process, else None."""
 
-    def __init__(self, path: Path) -> None:
+    try:
+        boot_id = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
+        stat = Path(f"/proc/{pid}/stat").read_text(encoding="ascii")
+    except OSError:
+        return None
+    # Field 22 (start time) follows the parenthesised command name.
+    start_ticks = stat.rsplit(")", 1)[-1].split()[19]
+    return f"{boot_id}:{start_ticks}"
+
+
+class RunLock:
+    """Cross-process lock using an exclusive file create.
+
+    A worker killed mid-run (``docker compose up`` recreating the container,
+    host reboot) leaves its lock file behind.  The lock records the owner's
+    process identity so a later run can tell a live owner from a stale file
+    instead of refusing to start forever.
+    """
+
+    def __init__(self, path: Path, *, stale_after_seconds: float = 12 * 3600) -> None:
         self.path = path
+        self.stale_after_seconds = stale_after_seconds
         self._handle: int | None = None
+
+    def _is_stale(self) -> bool:
+        try:
+            owner = json.loads(self.path.read_text(encoding="utf-8"))
+            pid = int(owner["pid"])
+            identity = owner.get("identity")
+        except (OSError, ValueError, KeyError, TypeError):
+            # Unreadable or legacy ``pid=...`` lock: fall back to its age.
+            identity, pid = None, None
+        if identity and pid is not None:
+            return _process_identity(pid) != identity
+        try:
+            age = time.time() - self.path.stat().st_mtime
+        except OSError:
+            return True
+        return age > self.stale_after_seconds
 
     def __enter__(self) -> RunLock:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            self._handle = os.open(
-                self.path,
-                os.O_CREAT | os.O_EXCL | os.O_WRONLY,
-            )
-        except FileExistsError as exc:
-            raise RuntimeError(f"Another shadow pipeline is already running: {self.path}") from exc
-        os.write(self._handle, f"pid={os.getpid()}\n".encode("ascii"))
+        for _ in range(2):
+            try:
+                self._handle = os.open(
+                    self.path,
+                    os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                )
+                break
+            except FileExistsError as exc:
+                if not self._is_stale():
+                    raise RuntimeError(f"Another shadow pipeline is already running: {self.path}") from exc
+                print(f"Removing stale pipeline lock: {self.path}", flush=True)
+                self.path.unlink(missing_ok=True)
+        else:
+            raise RuntimeError(f"Could not acquire pipeline lock: {self.path}")
+        owner = {"pid": os.getpid(), "identity": _process_identity(os.getpid())}
+        os.write(self._handle, json.dumps(owner).encode("ascii"))
         return self
 
     def __exit__(self, *_: object) -> None:
@@ -138,6 +182,7 @@ def validate_snapshot_manifest(
     minimum_coverage: float,
     expected_price_policy: str,
     minimum_history_sessions: int = 0,
+    max_failed_symbols: int = 0,
 ) -> dict[str, Any]:
     if manifest.get("requested_as_of_end") != requested_end:
         raise RuntimeError(
@@ -151,9 +196,11 @@ def validate_snapshot_manifest(
         )
     if manifest.get("price_adjustment_policy") != expected_price_policy:
         raise RuntimeError("Snapshot price adjustment policy does not match production config.")
-    if int(manifest.get("failed_symbols", 1)):
+    failed_symbols = int(manifest.get("failed_symbols", 1))
+    if failed_symbols > max_failed_symbols:
         raise RuntimeError(
-            f"Snapshot contains failed symbols: {manifest.get('failed_symbols')}"
+            f"Snapshot contains failed symbols: {failed_symbols} "
+            f"(allowed: {max_failed_symbols})"
         )
     market_rows = int(manifest.get("vnindex", {}).get("rows", 0))
     if market_rows < minimum_history_sessions:
@@ -171,6 +218,7 @@ def validate_snapshot_manifest(
         raise RuntimeError("Snapshot market-calendar alignment is below the quality gate.")
     return {
         "coverage_ratio": coverage,
+        "failed_symbols": failed_symbols,
         "successful_symbols": int(manifest.get("successful_symbols", 0)),
         "latest_market_date": manifest.get("vnindex", {}).get("max_time"),
         "history_sessions": market_rows,
@@ -380,7 +428,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=Path(
             os.environ.get(
                 "WAVE_H120_SERVING_RELEASE",
-                "deploy/wave_h120_shadow/serving_release.json",
+                # deploy/ is read-only inside the scoring container.
+                "runs/wave_h120_shadow/serving_release.json",
             )
         ),
     )
@@ -389,6 +438,15 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--skip-sync", action="store_true")
     parser.add_argument("--force-sync", action="store_true")
     parser.add_argument("--minimum-coverage", type=float, default=0.95)
+    parser.add_argument(
+        "--max-failed-symbols",
+        type=int,
+        default=int(os.environ.get("WAVE_H120_MAX_FAILED_SYMBOLS", "30")),
+        help=(
+            "Symbols the provider may fail to return after the sync retry pass "
+            "(delisted tickers, free-tier timeouts); they are left unscored."
+        ),
+    )
     parser.add_argument(
         "--requests-per-minute",
         type=float,
@@ -414,6 +472,8 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("history-sessions and minimum-history-sessions must be at least 372.")
     if args.retries < 0:
         raise ValueError("retries must be non-negative.")
+    if args.max_failed_symbols < 0:
+        raise ValueError("max-failed-symbols must be non-negative.")
     snapshot_date = args.snapshot_date or datetime.now(VIETNAM_TZ).date().isoformat()
     requested_end = args.as_of_date or snapshot_date
     date.fromisoformat(snapshot_date)
@@ -454,7 +514,8 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
         steps.append(result)
         write_json(manifest_path, payload)
         if result["status"] != "ok":
-            raise RuntimeError(f"Pipeline step failed: {name}")
+            log_tail = (logs_dir / f"{name}.log").read_text(encoding="utf-8", errors="replace")[-1_200:]
+            raise RuntimeError(f"Pipeline step failed: {name}\n{log_tail}")
 
     try:
         if not args.skip_sync:
@@ -502,6 +563,7 @@ def run_pipeline(args: argparse.Namespace) -> dict[str, Any]:
                 minimum_coverage=args.minimum_coverage,
                 expected_price_policy=args.price_policy,
                 minimum_history_sessions=args.minimum_history_sessions,
+                max_failed_symbols=args.max_failed_symbols,
             ),
         }
         effective_as_of_date = resolve_effective_as_of_date(

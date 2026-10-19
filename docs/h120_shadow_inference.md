@@ -83,31 +83,23 @@ the verified snapshot before feature building or inference. This lets a Sunday
 download be recorded as `snapshot_date=2026-08-23` while the model correctly
 scores Friday `as_of_date=2026-08-21`.
 
-The pipeline fails when market data are more than four calendar days behind
-the requested cutoff (override only with `--max-staleness-days` after
+The pipeline fails when market data are more than
+`WAVE_H120_MAX_STALENESS_DAYS` (default 0) calendar days behind the requested cutoff (override only with `--max-staleness-days` after
 investigation). A failed new run never overwrites a verified artifact; the API
 serves the newest successful, checksum-verified run instead.
 
 ## Daily scheduler
 
-When `python_data/server.py` is running, H120 shadow sync → audit → features
-→ frozen inference runs on weekdays at `18:30` Asia/Ho_Chi_Minh. It is enabled
-by default. Deployment settings:
+The daily run is owned by the `model_scoring` Compose worker (weekdays at
+`WAVE_DAILY_SCORING_TIME`, default 19:00 Asia/Ho_Chi_Minh), see
+[daily_independent_model_scoring.md](daily_independent_model_scoring.md).
+`python_data` only serves the verified results; it does not run the pipeline.
 
-```text
-WAVE_H120_SHADOW_ENABLED=1
-WAVE_H120_SHADOW_TIME=18:30
-```
-
-Set `WAVE_H120_SHADOW_ENABLED=0` to disable it. The scheduler retains the last
-verified snapshot when the provider or a quality gate fails. It remains
-advisory-only and records `trade_authorized=false`.
-
-The sync is throttled to 150 per-symbol requests per minute, below the Bronze
-provider limit of 180 requests per minute. Do not raise this limit unless the
-provider quota changes; a rate-limited run remains failed and is never served.
-Daily scoring also pins the frozen champion universe from
-`data/vnstock/v6_snapshot/symbols.csv`; newly listed symbols are observed only
+The sync is throttled by `WAVE_H120_REQUESTS_PER_MINUTE` (25 with a free
+`VNSTOCK_API_KEY`, capped at 18 in guest mode), below the free vnstock quota.
+Do not raise this limit unless the provider quota changes; a rate-limited run
+remains failed and is never served. Daily scoring also pins the frozen champion
+universe from `deploy/wave_h120_shadow/universe_symbols.csv`; newly listed symbols are observed only
 after an explicit universe-contract review, never silently added to demo output.
 
 ## API output

@@ -45,7 +45,6 @@ services:
             - PGPORT=5432
             - DATABASE_URL=postgresql://countduck:countduck@db:5432/fireant_stock
             - FINANCIAL_DATABASE_URL=postgresql://countduck:countduck@db:5432/fireant_stock
-            - LSTM_PRICE_RELEASE_POINTER_PATH=/app/deploy/price_forecast_lstm/daily_release.json
 
     web:
         container_name: fireant_web
@@ -97,6 +96,7 @@ services:
             - ./runs:/app/runs:ro
             - ./deploy:/app/deploy:ro
             - ./reports_wave_v6:/app/reports_wave_v6:ro
+            - ./predict_xgboost_and_lstm:/app/predict_xgboost_and_lstm:ro
             - vnstock_home:/root/.vnstock
         ports:
             # nginx /python_api/ trỏ tới cổng này.
@@ -108,7 +108,6 @@ services:
             - TZ=Asia/Ho_Chi_Minh
             - VNSTOCK_AUTO_UPGRADE=${VNSTOCK_AUTO_UPGRADE:-1}
             - WAVE_H120_RUN_ROOT=/app/runs/wave_h120_shadow
-            - WAVE_H120_SHADOW_ENABLED=0
             - WAVE_V6_RELEASE_PATH=/app/deploy/wave_v6_advisory/serving_release.json
             - WAVE_V6_RUN_ROOT=/app/runs/wave_v6_daily
 
@@ -159,6 +158,7 @@ services:
             - WAVE_HISTORY_SESSIONS=${WAVE_HISTORY_SESSIONS:-480}
             - WAVE_H120_UNIVERSE_SYMBOLS=/app/deploy/wave_h120_shadow/universe_symbols.csv
             - WAVE_H120_MAX_STALENESS_DAYS=${WAVE_H120_MAX_STALENESS_DAYS:-0}
+            - WAVE_H120_MAX_FAILED_SYMBOLS=${WAVE_H120_MAX_FAILED_SYMBOLS:-30}
             - WAVE_DAILY_KEEP_SUCCESS_RUNS=${WAVE_DAILY_KEEP_SUCCESS_RUNS:-14}
             - WAVE_DAILY_FAILED_RETENTION_DAYS=${WAVE_DAILY_FAILED_RETENTION_DAYS:-3}
         dns:

@@ -1105,46 +1105,62 @@ class VnstockDataAdapter:
         universe = equity_list["symbol"].astype(str).str.upper().sort_values().tolist()
         request_interval = 60.0 / requests_per_minute if requests_per_minute else 0.0
         next_request_at = time.monotonic()
-        for position, symbol in enumerate(universe, 1):
-            output = stock_dir / f"{symbol}.csv"
-            try:
-                if request_interval:
-                    wait_seconds = next_request_at - time.monotonic()
-                    if wait_seconds > 0:
-                        time.sleep(wait_seconds)
-                    next_request_at = max(next_request_at + request_interval, time.monotonic())
-                frame = self.get_stock_ohlcv(
-                    symbol,
-                    start,
-                    end,
-                    interval=interval,
-                    refresh=refresh_ohlcv,
-                    max_cache_age=None,
-                )
-                frame = self._update_rolling_cache(
-                    frame, asset_type="equity", symbol=symbol, interval=interval
-                )
-                self._write_csv_atomic(frame, output)
-                results[symbol] = {
-                    "status": "ok",
-                    "rows": int(len(frame)),
-                    "min_time": frame["time"].min().isoformat(),
-                    "max_time": frame["time"].max().isoformat(),
-                    "path": str(output),
-                    "sha256": self._sha256(output),
-                    "route": self.last_route,
-                    "quality": _ohlcv_quality_stats(frame, price_value_multiplier),
-                    "calendar_alignment": _calendar_alignment_stats(frame, vnindex["time"]),
-                }
-            except Exception as exc:
-                results[symbol] = {
-                    "status": "error",
-                    "error": f"{type(exc).__name__}: {exc}",
-                    "path": str(output),
-                }
-            if position % 25 == 0 or position == len(universe):
-                ok = sum(item["status"] == "ok" for item in results.values())
-                print(f"Synced {position}/{len(universe)} symbols; ok={ok}; errors={position-ok}")
+        # Free-tier providers time out or rate-limit sporadically, so failed
+        # symbols get one more pass after the full universe has been tried.
+        for attempt, symbols_to_sync in enumerate((universe, None), 1):
+            if symbols_to_sync is None:
+                symbols_to_sync = [
+                    symbol for symbol in universe if results[symbol]["status"] != "ok"
+                ]
+                if not symbols_to_sync:
+                    break
+                print(f"Retrying {len(symbols_to_sync)} failed symbols")
+            for position, symbol in enumerate(symbols_to_sync, 1):
+                output = stock_dir / f"{symbol}.csv"
+                try:
+                    if request_interval:
+                        wait_seconds = next_request_at - time.monotonic()
+                        if wait_seconds > 0:
+                            time.sleep(wait_seconds)
+                        next_request_at = max(next_request_at + request_interval, time.monotonic())
+                    frame = self.get_stock_ohlcv(
+                        symbol,
+                        start,
+                        end,
+                        interval=interval,
+                        refresh=refresh_ohlcv,
+                        max_cache_age=None,
+                    )
+                    frame = self._update_rolling_cache(
+                        frame, asset_type="equity", symbol=symbol, interval=interval
+                    )
+                    self._write_csv_atomic(frame, output)
+                    results[symbol] = {
+                        "status": "ok",
+                        "rows": int(len(frame)),
+                        "min_time": frame["time"].min().isoformat(),
+                        "max_time": frame["time"].max().isoformat(),
+                        "path": str(output),
+                        "sha256": self._sha256(output),
+                        "route": self.last_route,
+                        "quality": _ohlcv_quality_stats(frame, price_value_multiplier),
+                        "calendar_alignment": _calendar_alignment_stats(frame, vnindex["time"]),
+                        "attempt": attempt,
+                    }
+                except (Exception, SystemExit) as exc:
+                    # vnai raises SystemExit when the free quota is exceeded.
+                    results[symbol] = {
+                        "status": "error",
+                        "error": f"{type(exc).__name__}: {exc}",
+                        "path": str(output),
+                        "attempt": attempt,
+                    }
+                if position % 25 == 0 or position == len(symbols_to_sync):
+                    ok = sum(item["status"] == "ok" for item in results.values())
+                    print(
+                        f"Pass {attempt}: synced {position}/{len(symbols_to_sync)} symbols; "
+                        f"ok={ok}/{len(universe)}"
+                    )
 
         provider_package = "vnstock_data"
         try:

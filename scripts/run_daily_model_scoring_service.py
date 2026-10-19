@@ -34,13 +34,66 @@ def _truthy(value: str) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _register_vnstock_api_key() -> None:
+    """Raise the free vnstock quota from 20 (guest) to 60 requests/minute."""
+
+    api_key = os.getenv("VNSTOCK_API_KEY", "").strip()
+    if not api_key:
+        # Stay under the guest quota; vnai aborts the process once it is exceeded.
+        try:
+            configured = float(os.getenv("WAVE_H120_REQUESTS_PER_MINUTE", "18"))
+        except ValueError:
+            configured = 18.0
+        os.environ["WAVE_H120_REQUESTS_PER_MINUTE"] = str(min(configured, 18.0))
+        print("VNSTOCK_API_KEY is empty; vnstock runs in guest mode (18 requests/minute).", flush=True)
+        return
+    try:
+        import vnstock
+    except Exception as exc:  # noqa: BLE001 - the sync step reports the real import error
+        print(f"Cannot import vnstock to register the API key: {exc}", flush=True)
+        return
+    for name in ("change_api_key", "register_user"):
+        register = getattr(vnstock, name, None)
+        if callable(register):
+            try:
+                register(api_key)
+                print(f"Registered VNSTOCK_API_KEY via vnstock.{name}().", flush=True)
+            except (Exception, SystemExit) as exc:
+                print(f"Registering VNSTOCK_API_KEY failed: {exc}", flush=True)
+            return
+    print("vnstock reads VNSTOCK_API_KEY from the environment.", flush=True)
+
+
 def _run_for_today(today: str) -> int:
     command = [sys.executable, "scripts/run_daily_model_scoring.py", "--snapshot-date", today]
-    return subprocess.run(
+    print(f"Daily scoring started for {today}", flush=True)
+    completed = subprocess.run(
         command,
         cwd=ROOT,
         check=False,
-    ).returncode
+        capture_output=True,
+        text=True,
+    )
+    _report(today, completed)
+    return completed.returncode
+
+
+def _report(today: str, completed: subprocess.CompletedProcess[str]) -> None:
+    """Print one readable line per run so `docker compose logs` shows why it failed."""
+
+    if completed.returncode == 0:
+        print(f"Daily scoring succeeded for {today}", flush=True)
+        return
+    detail = completed.stderr.strip()[-1_500:]
+    try:
+        manifest = json.loads(completed.stdout)
+        for step in manifest.get("steps", []):
+            if step.get("return_code"):
+                detail = (step.get("stderr_tail") or step.get("stdout_tail") or "").strip()[-1_500:]
+        detail = manifest.get("error") or detail
+    except (json.JSONDecodeError, AttributeError):
+        pass
+    print(f"Daily scoring failed for {today} (exit {completed.returncode}):\n{detail}", flush=True)
 
 
 def _prune_after_success() -> None:
@@ -106,6 +159,7 @@ def main() -> int:
     max_attempts = _positive_int("WAVE_DAILY_SCORING_MAX_ATTEMPTS", 8)
     retry_minutes = _positive_int("WAVE_DAILY_SCORING_RETRY_MINUTES", 30)
     state = _load_state()
+    _register_vnstock_api_key()
 
     def attempt(today: str) -> None:
         attempts = int(state.get("attempt_count", 0)) if state.get("attempt_date") == today else 0

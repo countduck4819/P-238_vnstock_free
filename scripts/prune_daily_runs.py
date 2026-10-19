@@ -108,7 +108,7 @@ def main() -> int:
     parser.add_argument("--failed-retention-days", type=int, default=3)
     parser.add_argument(
         "--pointer", type=Path, action="append",
-        default=[Path("deploy/wave_h120_shadow/serving_release.json")],
+        default=[Path("runs/wave_h120_shadow/serving_release.json")],
         help="Serving/release pointer whose referenced run must not be deleted; repeatable.",
     )
     args = parser.parse_args()

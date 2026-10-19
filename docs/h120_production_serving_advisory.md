@@ -11,10 +11,10 @@ Premium users and administrators. It is an **advisory-only** product surface:
 - it is not a trade-approved model. Promotion still requires a new untouched
   holdout and a cost-aware backtest.
 
-The release lock is [serving_release.json](../deploy/wave_h120_shadow/serving_release.json).
-It pins the verified 2026-08-21 market session (snapshot downloaded 2026-08-23),
-whose prediction parquet SHA-256 is
-`0f580360ca50db0539c36170e48fbd97ee353c39cfc53d9600b5ab286d139bfe`.
+Each successful daily run of the `model_scoring` worker publishes the release
+lock `runs/wave_h120_shadow/serving_release.json`, pinning that run's
+prediction parquet by path, size and SHA-256. The frozen model bundle stays in
+[bundle_manifest.json](../deploy/wave_h120_shadow/bundle_manifest.json).
 
 ## Service contract
 
@@ -41,7 +41,6 @@ The compose configuration supplies:
 ```dotenv
 PYTHON_API_URL=http://python_data:6060/api
 WAVE_H120_RUN_ROOT=/app/runs/wave_h120_shadow
-WAVE_H120_SHADOW_ENABLED=0
 INTERNAL_API_BASE_URL=http://api:8000/api
 NEXT_PUBLIC_H120_ENABLED=true
 ```
@@ -49,10 +48,10 @@ NEXT_PUBLIC_H120_ENABLED=true
 `runs/` is mounted read-only into `python_data`. The browser uses the same-origin
 `/api` path; Next.js rewrites it server-side to `INTERNAL_API_BASE_URL`, so an
 external product domain never points users at `localhost`. `pyarrow` is included because
-the product endpoint reads the verified parquet file. The H120 daily scheduler
-is intentionally disabled in this serving container: the frozen production
-image must not train or mutate artifacts. Run the daily shadow pipeline in its
-separate, fully packaged worker after the demo rollout.
+the product endpoint reads the verified parquet file. The serving
+container never runs the pipeline: the frozen production image must not train
+or mutate artifacts. The daily run belongs to the separate `model_scoring`
+worker.
 
 Before rollout, build and start the services, then check the Python endpoint
 inside its container and the authenticated NestJS endpoint with a Premium JWT:
