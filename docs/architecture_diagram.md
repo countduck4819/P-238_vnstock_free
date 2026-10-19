@@ -40,8 +40,8 @@ flowchart LR
     V6[V6 train / review / promote] --> TOP[Reviewed Top 50 cohort]
     TOP --> ENS[LSTM + Prophet + Holt]
     ENS --> PATH[78-session price trajectory]
-    PATH --> REL[deploy/price_forecast_lstm<br/>release pointer]
-    REL --> DATA
+    PATH --> REL[predict_xgboost_and_lstm<br/>ensemble + LSTM JSON]
+    REL --> API
     DATA --> API[NestJS proxy]
     API --> WEB[Next.js UI]
 ```
@@ -66,7 +66,9 @@ flowchart TD
 
 - H120 được phục vụ từ run hợp lệ dưới `runs/wave_h120_shadow/`.
 - V6 dùng release pointer dưới `deploy/wave_v6_advisory/`.
-- Price forecast dùng release pointer dưới `deploy/price_forecast_lstm/`.
+- Dài hạn (Top 50 + giá LSTM 78 phiên) được cập nhật bằng cách chép
+  `ensemble_top50_stocks.json` và `predict_top50_stocks.json` vào
+  `predict_xgboost_and_lstm/`; NestJS đọc trực tiếp hai file này.
 - Qdrant chỉ lưu embedding/vector search cho FinSight, không lưu OHLCV hay
   artifact model.
 

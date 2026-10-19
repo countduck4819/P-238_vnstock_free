@@ -22,17 +22,23 @@ type V6Payload = {
   [key: string]: unknown;
 };
 
+function symbolsDate(top50: { symbols?: Array<{ date?: string }> }): string {
+  return top50.symbols?.find((item) => item?.date)?.date ?? '';
+}
+
 @Injectable()
 export class WaveV6Service {
   private readonly timeoutMs = Number(
     process.env.WAVE_V6_UPSTREAM_TIMEOUT_MS ?? 5_000,
   );
 
-  private findDeployDir(): string | null {
+  // Dài hạn cập nhật bằng cách chép hai file mới vào predict_xgboost_and_lstm/:
+  // ensemble_top50_stocks.json (xếp hạng) và predict_top50_stocks.json (LSTM).
+  private findPredictionDir(): string | null {
     const candidates = [
-      path.resolve(process.cwd(), 'deploy'),
-      path.resolve(process.cwd(), '../deploy'),
-      '/app/deploy',
+      path.resolve(process.cwd(), 'predict_xgboost_and_lstm'),
+      path.resolve(process.cwd(), '../predict_xgboost_and_lstm'),
+      '/app/predict_xgboost_and_lstm',
     ];
     for (const c of candidates) {
       if (fs.existsSync(c)) return c;
@@ -42,14 +48,11 @@ export class WaveV6Service {
 
   private loadDirectPayload(limit = 50): V6Payload | null {
     try {
-      const deployDir = this.findDeployDir();
-      if (!deployDir) return null;
+      const predictionDir = this.findPredictionDir();
+      if (!predictionDir) return null;
 
-      const top50Path = path.join(deployDir, 'wave_v6_advisory/top50.json');
-      const pricePath = path.join(
-        deployDir,
-        'price_forecast_lstm/price_predictions.json',
-      );
+      const top50Path = path.join(predictionDir, 'ensemble_top50_stocks.json');
+      const pricePath = path.join(predictionDir, 'predict_top50_stocks.json');
 
       if (!fs.existsSync(top50Path)) return null;
 
@@ -63,7 +66,7 @@ export class WaveV6Service {
         }
       }
 
-      const asOfDate = top50.as_of_date || '2026-08-27';
+      const asOfDate = top50.as_of_date || symbolsDate(top50);
       const symbols = Array.isArray(top50.symbols) ? top50.symbols : [];
       const sliced = symbols.slice(0, limit);
 
@@ -106,7 +109,8 @@ export class WaveV6Service {
           independent_from_h120: true,
         },
         summary: {
-          eligible_rows: 505,
+          eligible_rows:
+            Number(top50.source_prediction_output?.rows) || symbols.length,
           shortlist_rows: symbols.length,
         },
         predictions,

@@ -15,8 +15,8 @@ from flask import Blueprint, jsonify, request
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RELEASE_PATH = ROOT / "deploy" / "wave_v6_advisory" / "serving_release.json"
 DEFAULT_RUN_ROOT = ROOT / "runs" / "wave_v6_daily"
-DEFAULT_LSTM_POINTER_PATH = ROOT / "deploy" / "price_forecast_lstm" / "daily_release.json"
-DEFAULT_LSTM_JSON_PATH = ROOT / "runs" / "lstm_notebook_replay" / "predictions" / "price_forecast_lstm" / "predict_top50_stocks.json"
+# Long-term results are updated by copying the LSTM output into this folder.
+DEFAULT_LSTM_JSON_PATH = ROOT / "predict_xgboost_and_lstm" / "predict_top50_stocks.json"
 MAX_LIMIT = 50
 MAX_UNIVERSE = 5_000
 
@@ -84,13 +84,13 @@ def _number(value: Any) -> float | None:
 
 
 def _lstm_prediction_artifact() -> tuple[Path, dict[str, Any] | None]:
-    """Resolve the verified LSTM artifact and its dated release pointer."""
+    """Resolve the LSTM artifact, through a dated release pointer when configured."""
 
     pointer_value = os.environ.get("LSTM_PRICE_RELEASE_POINTER_PATH")
-    pointer_path = Path(pointer_value) if pointer_value else DEFAULT_LSTM_POINTER_PATH
-    if not pointer_path.is_absolute():
+    pointer_path = Path(pointer_value) if pointer_value else None
+    if pointer_path is not None and not pointer_path.is_absolute():
         pointer_path = ROOT / pointer_path
-    if pointer_path.is_file():
+    if pointer_path is not None and pointer_path.is_file():
         pointer = _read_json(pointer_path)
         return (
             _verified_artifact(pointer.get("prediction_output"), "LSTM price prediction output"),

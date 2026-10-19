@@ -20,14 +20,10 @@ export class StockPredictionService
 {
   private readonly logger = new Logger(StockPredictionService.name);
 
-  // Đường dẫn đúng tới file JSON (hoạt động cả ở src và dist)
-  private readonly fallbackJsonPath = path.resolve(
+  // Dài hạn cập nhật bằng cách chép file LSTM mới vào predict_xgboost_and_lstm/.
+  private readonly defaultJsonPath = path.resolve(
     process.cwd(),
     '../predict_xgboost_and_lstm/predict_top50_stocks.json',
-  );
-  private readonly releasePointerPath = path.resolve(
-    process.cwd(),
-    '../deploy/price_forecast_lstm/daily_release.json',
   );
   private importSignature = '';
   private importing = false;
@@ -53,7 +49,6 @@ export class StockPredictionService
     });
   }
 
-  /** Theo dõi file + import lần đầu */
   private resolveJsonPath(): string {
     const configured = process.env.LSTM_PRICE_PREDICTION_JSON_PATH;
     if (configured) {
@@ -61,22 +56,7 @@ export class StockPredictionService
         ? configured
         : path.resolve(process.cwd(), configured);
     }
-    if (fs.existsSync(this.releasePointerPath)) {
-      try {
-        const pointer = JSON.parse(
-          fs.readFileSync(this.releasePointerPath, 'utf8'),
-        ) as { prediction_output?: { path?: string } };
-        const outputPath = pointer.prediction_output?.path;
-        if (outputPath) {
-          return path.isAbsolute(outputPath)
-            ? outputPath
-            : path.resolve(process.cwd(), '..', outputPath);
-        }
-      } catch (error) {
-        this.logger.warn(`Cannot read LSTM release pointer: ${error}`);
-      }
-    }
-    return this.fallbackJsonPath;
+    return this.defaultJsonPath;
   }
 
   private async refreshFromJson() {

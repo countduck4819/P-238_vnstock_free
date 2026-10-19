@@ -234,6 +234,13 @@ Trong Compose, data service chỉ phục vụ dữ liệu và các artifact đã
 daily H120 scoring chạy ở worker `model_scoring` riêng. Worker chạy vào
 `WAVE_DAILY_SCORING_TIME` (mặc định 19:00, giờ Việt Nam), đồng bộ snapshot mới,
 giữ rolling history tối đa 480 phiên và ghi run có manifest/hash vào `runs/`.
+Xem kết quả mỗi ngày bằng `docker compose logs -f model_scoring` (một dòng
+thành công/thất bại kèm lỗi của bước hỏng). Worker cần `VNSTOCK_API_KEY` trong
+`.env` để chạy nhanh (60 request/phút); không có key thì tự giảm còn 18/phút.
+
+Dự đoán dài hạn không chạy hằng ngày: chép hai file mới
+`ensemble_top50_stocks.json` và `predict_top50_stocks.json` vào
+`predict_xgboost_and_lstm/`, `api` tự nạp lại trong vài giây.
 
 ### 3. NestJS backend
 
