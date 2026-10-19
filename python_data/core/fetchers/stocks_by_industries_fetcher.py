@@ -1,17 +1,13 @@
-try:
-    from vnstock_data import Reference
-except ImportError:
-    from vnstock import Reference
 import traceback
+
+from core import vnstock_client
 
 
 def fetch_stocks_by_industries():
     """Lấy danh sách cổ phiếu và group theo ngành ICB"""
     try:
-        ref = Reference()
-
         # Lấy toàn bộ cổ phiếu kèm phân ngành ICB
-        df_stocks = ref.equity.list_by_industry(lang="vi")
+        df_stocks = vnstock_client.symbols_by_industries()
 
         if df_stocks is None or df_stocks.empty:
             print("Không có dữ liệu cổ phiếu.")
@@ -22,7 +18,7 @@ def fetch_stocks_by_industries():
             print("Không tìm thấy cột symbol.")
             return {}
 
-        # vnstock_data có thể dùng tên ngành khác schema vnstock cũ
+        # Ưu tiên ICB cấp 3, các tên cột khác để phòng nguồn đổi schema
         industry_column = None
 
         for column in [
@@ -38,7 +34,7 @@ def fetch_stocks_by_industries():
         if not industry_column:
             print(
                 "Không tìm thấy cột ngành trong dữ liệu "
-                f"vnstock_data. Columns: {df_stocks.columns.tolist()}"
+                f"vnstock. Columns: {df_stocks.columns.tolist()}"
             )
             return {}
 

@@ -1,5 +1,4 @@
-from vnstock_data import Reference, Fundamental
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 from difflib import SequenceMatcher
 from urllib.parse import quote, unquote
@@ -15,6 +14,7 @@ import unicodedata
 import threading
 import multiprocessing as mp
 
+from core import vnstock_client
 from core.paths import data_path
 
 
@@ -45,9 +45,6 @@ NEWS_SLOT_TIMEOUT_SECONDS = float(
 )
 NEWS_UPSTREAM_CALL_TIMEOUT_SECONDS = float(
     os.environ.get("NEWS_UPSTREAM_CALL_TIMEOUT_SECONDS", "70")
-)
-FILING_CACHE_TTL_HOURS = float(
-    os.environ.get("NEWS_FILING_CACHE_TTL_HOURS", "24")
 )
 
 VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
@@ -304,25 +301,19 @@ def _call_with_hard_timeout(func, *args, timeout=None, **kwargs):
 
 
 def _vnstock_news_call(symbol, limit):
-    ref = Reference()
-    return (
-        ref
-        .company(symbol)
-        .news(
-            length=NEWS_LOOKBACK_DAYS,
-            mode="detail",
-            limit=limit,
-        )
-    )
+    df = vnstock_client.company_news(symbol, limit=limit)
 
+    # Bản free không lọc theo số ngày; giữ đúng cửa sổ NEWS_LOOKBACK_DAYS.
+    if df is not None and not df.empty and "publish_time" in df.columns:
+        published = pd.to_datetime(df["publish_time"], errors="coerce")
+        cutoff = pd.Timestamp.now() - pd.Timedelta(days=NEWS_LOOKBACK_DAYS)
+        recent = df[published.isna() | (published >= cutoff)]
 
-def _vnstock_filing_call(symbol):
-    fun = Fundamental()
-    return (
-        fun
-        .equity(symbol)
-        .filing()
-    )
+        # Mã ít tin thì vẫn giữ bài cũ hơn thay vì trả rỗng.
+        if not recent.empty:
+            df = recent
+
+    return df
 
 
 def _get_symbol_lock(symbol: str):
@@ -470,102 +461,21 @@ def _has_unresolved_pdf(cached):
     return False
 
 
-def _filing_cache_is_fresh(cached):
-    if not isinstance(cached, dict):
-        return False
-
-    if not isinstance(cached.get("data"), list):
-        return False
-
-    updated_at = _safe_text(cached.get("updated_at"))
-
-    if not updated_at:
-        return False
-
-    try:
-        updated = datetime.strptime(
-            updated_at,
-            "%Y-%m-%d %H:%M:%S",
-        ).replace(tzinfo=VN_TZ)
-    except ValueError:
-        return False
-
-    return (
-        _now_vn() - updated
-        < timedelta(hours=FILING_CACHE_TTL_HOURS)
-    )
-
-
 def _fetch_filings(symbol):
     """
-    Lấy toàn bộ filing của doanh nghiệp.
-    Không truyền doc_type => lấy tất cả.
+    Danh sách tài liệu (filing) để gắn PDF cho tin tức.
+
+    vnstock free không có API filing (chỉ vnstock_data trả phí có), nên chỉ
+    dùng lại cache filing cũ nếu còn; tin có URL PDF trực tiếp vẫn được gắn.
     """
 
-    cache_file = f"{symbol}_filings.json"
-    cached = load_json(cache_file)
+    cached = load_json(f"{symbol}_filings.json")
 
-    if _filing_cache_is_fresh(cached):
-        print(f"📄 Filings {symbol}: dùng cache")
+    if isinstance(cached, dict) and isinstance(cached.get("data"), list):
+        print(f"📄 Filings {symbol}: dùng cache cũ")
         return cached["data"]
 
-    try:
-        _pace_upstream_request()
-
-        print(
-            f"📄 Fetching filings for {symbol}"
-        )
-
-        df = _call_with_hard_timeout(
-            _vnstock_filing_call,
-            symbol,
-            timeout=NEWS_UPSTREAM_CALL_TIMEOUT_SECONDS,
-        )
-
-        if df is None or df.empty:
-            print(
-                f"ℹ️ Không có filing cho {symbol}"
-            )
-            return []
-
-        print(
-            f"✅ Filings {symbol}: "
-            f"{len(df)} records"
-        )
-
-        records = [
-            {
-                "doc_url": _safe_text(row.get("doc_url")),
-                "doc_title": _safe_text(row.get("doc_title")),
-                "doc_name": _safe_text(row.get("doc_name")),
-            }
-            for _, row in df.iterrows()
-        ]
-
-        save_json(
-            cache_file,
-            {
-                "symbol": symbol,
-                "data": records,
-                "updated_at": _now_vn().strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
-                "cache_version": 1,
-            },
-        )
-
-        return records
-
-    except Exception as e:
-        print(
-            f"⚠️ Không lấy được filing "
-            f"{symbol}: {e}"
-        )
-
-        if isinstance(cached, dict):
-            return cached.get("data") or []
-
-        return []
+    return []
 
 
 def _find_pdf_urls(
@@ -833,7 +743,7 @@ def _fetch_from_api(
 
         print(
             f"📰 Fetching news from "
-            f"vnstock_data for {symbol}"
+            f"vnstock for {symbol}"
         )
 
         upstream_started = time.perf_counter()
@@ -846,7 +756,7 @@ def _fetch_from_api(
         )
 
         print(
-            f"⏱️ vnstock_data.news {symbol}: "
+            f"⏱️ vnstock.news {symbol}: "
             f"{time.perf_counter() - upstream_started:.2f}s"
         )
 
@@ -1360,7 +1270,7 @@ def fetch_news(symbol: str):
 
     # Stale-while-revalidate: cache đúng schema dù đã đến hạn vẫn được trả ngay.
     # Worker phía trên tiếp tục refresh nền, nên việc mở trang không phải chờ
-    # vnstock_data thêm 30-45 giây.
+    # vnstock thêm 30-45 giây.
     if _cache_is_usable(cached):
         print(f"📦 Trả cache cũ {symbol}, đang refresh nền")
         return _schedule_pdf_enrichment(
@@ -1373,7 +1283,7 @@ def fetch_news(symbol: str):
     if flight["event"].wait(NEWS_REQUEST_TIMEOUT_SECONDS):
         return flight["result"] or cached or {}
 
-    # Không giữ Flask request vô hạn khi vnstock_data bị treo. Worker daemon
+    # Không giữ Flask request vô hạn khi vnstock bị treo. Worker daemon
     # vẫn hoàn thành cache nếu upstream trả về sau đó.
     print(
         f"⏱️ Fetch news {symbol} quá "

@@ -1,19 +1,12 @@
-try:
-    from vnstock_data import Reference
-except ImportError:
-    from vnstock import Reference
 import traceback
+
+from core import vnstock_client
 
 
 def fetch_industries():
     """Lấy danh sách ngành nghề ICB"""
     try:
-        reference = Reference()
-        df = reference.industry.list(lang="vi")
-
-        industries = sorted(
-            df["icb_name"].dropna().unique().tolist()
-        )
+        industries = vnstock_client.industry_names()
 
         print(f"🏭 Fetched {len(industries)} ngành nghề")
         return industries

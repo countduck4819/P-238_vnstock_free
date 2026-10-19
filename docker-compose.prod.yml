@@ -28,14 +28,16 @@ services:
         depends_on:
             db:
                 condition: service_started
+            python_data:
+                condition: service_started
             finsight_api:
                 condition: service_started
         command: ["npm", "run", "start:dev"]
         env_file:
             - .env
         environment:
-            - PYTHON_API=http://host.docker.internal:6060/api
-            - PYTHON_API_URL=http://host.docker.internal:6060/api
+            - PYTHON_API=http://python_data:6060/api
+            - PYTHON_API_URL=http://python_data:6060/api
             - FINSIGHT_API_URL=http://finsight_api:6071
             - FINSIGHT_API_TIMEOUT_MS=120000
             - PGHOST=db
@@ -78,6 +80,35 @@ services:
             - "127.0.0.1:4040:4040"
         depends_on:
             - api
+
+    python_data:
+        container_name: fireant_python
+        # vnstock bản free, thay cho service Python chạy ngoài Docker với
+        # vnstock_data trả phí. start.sh tự nâng vnstock lên bản mới nhất.
+        build:
+            context: ./python_data
+        restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - ./data:/app/data
+            - ./runs:/app/runs:ro
+            - ./deploy:/app/deploy:ro
+            - ./reports_wave_v6:/app/reports_wave_v6:ro
+            - vnstock_home:/root/.vnstock
+        ports:
+            # nginx /python_api/ trỏ tới cổng này.
+            - "127.0.0.1:6060:6060"
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+        environment:
+            - TZ=Asia/Ho_Chi_Minh
+            - VNSTOCK_AUTO_UPGRADE=${VNSTOCK_AUTO_UPGRADE:-1}
+            - WAVE_H120_RUN_ROOT=/app/runs/wave_h120_shadow
+            - WAVE_H120_SHADOW_ENABLED=0
+            - WAVE_V6_RELEASE_PATH=/app/deploy/wave_v6_advisory/serving_release.json
+            - WAVE_V6_RUN_ROOT=/app/runs/wave_v6_daily
 
     finsight_api:
         container_name: finsight_api
@@ -134,3 +165,4 @@ services:
 
 volumes:
     finsight_hf_cache:
+    vnstock_home:

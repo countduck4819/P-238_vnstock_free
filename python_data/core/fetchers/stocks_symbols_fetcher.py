@@ -1,9 +1,6 @@
-try:
-    from vnstock_data import Reference
-except ImportError:
-    from vnstock import Reference
 import traceback
-import pandas as pd
+
+from core import vnstock_client
 
 
 def fetch_stocks_symbols():
@@ -12,16 +9,14 @@ def fetch_stocks_symbols():
     Dữ liệu này dùng để feed cho TradingView widget.
     """
     try:
-        ref = Reference()
-
         # Lấy toàn bộ mã cổ phiếu
-        df_all = ref.equity.list()
+        df_all = vnstock_client.all_symbols()
         valid_symbols = set(
             df_all["symbol"].dropna().unique()
         )
 
         # Lấy danh sách cổ phiếu theo sàn
-        df_exchange = ref.equity.list_by_exchange()
+        df_exchange = vnstock_client.symbols_by_exchange()
         df_exchange = df_exchange[
             ["symbol", "exchange"]
         ].dropna()

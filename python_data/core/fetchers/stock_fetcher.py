@@ -9,11 +9,8 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pandas as pd
-try:
-    from vnstock_data import Market
-except ImportError:
-    from vnstock import Market
 
+from core import vnstock_client
 from core.paths import data_path
 
 
@@ -22,11 +19,18 @@ VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 HISTORY_START = "2015-01-01"
 UPDATE_HOUR = 17
 
-REQUEST_DELAY = 0.5
+# Bản free giới hạn số request/phút: giãn cách các lần gọi và không gọi lại
+# một mã vừa cập nhật thất bại (ví dụ ngày nghỉ lễ chưa có phiên mới).
+REQUEST_DELAY = float(os.environ.get("STOCK_REQUEST_DELAY_SECONDS", "3"))
+RETRY_AFTER_SECONDS = float(
+    os.environ.get("STOCK_REFRESH_RETRY_SECONDS", "1800")
+)
 CACHE_DIR = data_path("stocks")
 
 _last_call = 0.0
 _api_lock = threading.Lock()
+_last_attempt: dict[str, float] = {}
+_last_attempt_lock = threading.Lock()
 
 
 def save_json(filename: str, data: list[dict]) -> None:
@@ -81,7 +85,7 @@ def _fetch_from_api(
     end: str,
 ) -> list[dict]:
     """
-    Lấy dữ liệu trực tiếp từ vnstock_data.
+    Lấy dữ liệu trực tiếp từ vnstock (bản free).
 
     Các request được serialize để hạn chế nhiều request đồng thời
     cùng đập vào upstream.
@@ -106,7 +110,7 @@ def _fetch_from_api(
         _last_call = time.time()
 
         print(
-            f"📈 Fetching từ vnstock_data: "
+            f"📈 Fetching từ vnstock: "
             f"{symbol} ({start} → {end})"
         )
 
@@ -114,14 +118,14 @@ def _fetch_from_api(
         end_dt = pd.to_datetime(end)
 
         try:
-            market = Market()
-            df = market.equity(symbol).ohlcv(
+            df = vnstock_client.history(
+                symbol,
                 start=start_dt.strftime("%Y-%m-%d"),
                 end=end_dt.strftime("%Y-%m-%d"),
                 interval="1D",
             )
         except Exception as exc:
-            print(f"⚠️ Lỗi fetch từ vnstock_data cho {symbol}: {exc}")
+            print(f"⚠️ Lỗi fetch từ vnstock cho {symbol}: {exc}")
             df = None
 
     if df is None or df.empty:
@@ -370,6 +374,22 @@ def fetch_stock(
     update_start = (
         last_date + timedelta(days=1)
     ).strftime("%Y-%m-%d")
+
+    with _last_attempt_lock:
+        last_attempt = _last_attempt.get(symbol, 0.0)
+
+        if time.time() - last_attempt < RETRY_AFTER_SECONDS:
+            print(
+                f"⏭️ {symbol} vừa thử cập nhật, "
+                "dùng cache để tiết kiệm quota vnstock."
+            )
+            return filter_requested_range(
+                cached_data,
+                start,
+                effective_end,
+            )
+
+        _last_attempt[symbol] = time.time()
 
     print(
         f"📉 Cache {symbol} thiếu dữ liệu: "

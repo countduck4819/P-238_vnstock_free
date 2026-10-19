@@ -9,11 +9,8 @@ import traceback
 from datetime import datetime, timedelta
 
 import pandas as pd
-try:
-    from vnstock_data import Fundamental, Market
-except ImportError:
-    from vnstock import Fundamental, Market
 
+from core import vnstock_client
 from core.paths import data_path
 
 CACHE_DIR = data_path("finance")
@@ -25,7 +22,7 @@ CACHE_VERSION = 3
 # 12 tiếng sẽ đủ nhẹ API nhưng dữ liệu không bị quá cũ.
 CACHE_TTL_HOURS = 12
 
-# Chỉ giữ 8 kỳ gần nhất.
+# Chỉ giữ 8 kỳ gần nhất (bản free thường chỉ trả khoảng 4 kỳ).
 MAX_PERIODS = 8
 
 _last_call = 0
@@ -36,7 +33,7 @@ _finance_flights = set()
 _finance_flights_guard = threading.Lock()
 
 FINANCE_REQUEST_DELAY_SECONDS = float(
-    os.environ.get("FINANCE_REQUEST_DELAY_SECONDS", "0.5")
+    os.environ.get("FINANCE_REQUEST_DELAY_SECONDS", "3")
 )
 
 _PERIOD_COLUMN_RE = re.compile(
@@ -47,10 +44,14 @@ _PERIOD_COLUMN_RE = re.compile(
 _CANONICAL_METRIC_IDS = {
     "p_e": "RT_VALUE_PE",
     "pe": "RT_VALUE_PE",
+    "pe_ratio": "RT_VALUE_PE",
     "price_to_earning": "RT_VALUE_PE",
     "price_to_earnings": "RT_VALUE_PE",
     "trailing_eps": "RT_VALUE_EPS",
     "eps": "RT_VALUE_EPS",
+    "eps_vnd": "RT_VALUE_EPS",
+    "basic_eps": "RT_VALUE_EPS",
+    "earnings_per_share": "RT_VALUE_EPS",
     "beta": "RT_VALUE_BETA",
     "market_cap": "RT_VALUE_MARKET_CAP",
     "market_capital": "RT_VALUE_MARKET_CAP",
@@ -147,7 +148,7 @@ def _cache_is_fresh(cached):
     if cached.get("cache_version") != CACHE_VERSION:
         return False
 
-    # Fast summary chỉ là dữ liệu tạm để UI hiện ngay. Fundamental.ratio
+    # Fast summary chỉ là dữ liệu tạm để UI hiện ngay. Finance.ratio
     # vẫn cần chạy nền để hoàn thiện EPS/Beta và các kỳ báo cáo.
     if cached.get("partial"):
         return False
@@ -327,6 +328,24 @@ def _canonical_metric_id(item_id, name=""):
     if normalized_name == "beta" or normalized_name.endswith("_beta"):
         return "RT_VALUE_BETA"
 
+    if normalized_name in {"p_e", "pe", "pe_ratio"} or normalized_name.endswith("_p_e"):
+        return "RT_VALUE_PE"
+
+    if normalized_name in {
+        "eps",
+        "eps_vnd",
+        "eps_ttm",
+        "basic_eps",
+        "trailing_eps",
+        "earnings_per_share",
+        "earnings_per_share_vnd",
+    }:
+        return "RT_VALUE_EPS"
+
+    # Tên cột VCI có tiền tố nhóm chỉ tiêu, ví dụ "Valuation EPS (VND)".
+    if normalized_name.endswith(("_eps", "_eps_vnd")):
+        return "RT_VALUE_EPS"
+
     return str(item_id or "").strip()
 
 
@@ -339,7 +358,7 @@ def _normalize_period(value):
 
 def _normalize_records(df):
     """
-    Chuẩn hóa cả hai schema của vnstock_data:
+    Chuẩn hóa cả hai schema bảng chỉ số (rộng và dài):
 
     - Dạng rộng mới: item, item_id, 2026-Q1, 2025-Q4...
     - Dạng dài cũ: id/item_id, period, value...
@@ -361,7 +380,7 @@ def _normalize_records(df):
     period_column = column_lookup.get("period")
     value_column = column_lookup.get("value")
 
-    # Schema dài đã được chuẩn hóa sẵn từ một số phiên bản vnstock_data.
+    # Schema dài (id/period/value) đã chuẩn hóa sẵn.
     if period_column and value_column:
         for row_index, (_, row) in enumerate(df.iterrows()):
             source_id = row.get(id_column) if id_column else ""
@@ -405,6 +424,76 @@ def _normalize_records(df):
                 "order": _safe_value(row.get(order_column)) if order_column else row_index,
             })
 
+
+    return records
+
+
+def _find_column(columns, *keywords):
+    for column in columns:
+        key = _normalize_metric_key(column)
+        if all(keyword in key for keyword in keywords):
+            return column
+    return None
+
+
+def _normalize_period_rows(df):
+    """
+    Schema VCI: mỗi dòng là một kỳ, mỗi cột là một chỉ số, kèm cột năm
+    (year_report) và quý (length_report). Chuyển về schema dài chung.
+    """
+    columns = list(df.columns)
+    year_column = _find_column(columns, "year")
+    quarter_column = (
+        _find_column(columns, "length")
+        or _find_column(columns, "quarter")
+    )
+
+    if not year_column:
+        return []
+
+    meta_columns = {year_column, quarter_column}
+    meta_columns.update(
+        column
+        for column in columns
+        if _normalize_metric_key(column) in {"ticker", "symbol", "cp", "meta_ticker"}
+        or _normalize_metric_key(column).endswith("ticker")
+    )
+
+    records = []
+
+    for _, row in df.iterrows():
+        try:
+            year = int(float(row.get(year_column)))
+        except (TypeError, ValueError):
+            continue
+
+        quarter = None
+        if quarter_column:
+            try:
+                quarter = int(float(row.get(quarter_column)))
+            except (TypeError, ValueError):
+                quarter = None
+
+        period = f"{year}-Q{quarter}" if quarter in {1, 2, 3, 4} else str(year)
+
+        for order, column in enumerate(columns):
+            if column in meta_columns:
+                continue
+
+            value = _safe_value(row.get(column))
+            if isinstance(value, str):
+                continue
+
+            name = str(column).strip()
+            records.append({
+                "id": _canonical_metric_id(_normalize_metric_key(name), name),
+                "source_id": _normalize_metric_key(name),
+                "name": name,
+                "period": period,
+                "unit": None,
+                "value": value,
+                "order": order,
+            })
 
     return records
 
@@ -461,9 +550,9 @@ def _fetch_from_api(
     period: str = "quarter",
 ):
     """
-    Gọi vnstock_data Fundamental.ratio.
+    Gọi Finance.ratio của vnstock free.
 
-    Schema vnstock_data hiện tại dạng rộng:
+    Schema KBS dạng rộng:
 
         {
             "item": "Chỉ số giá thị trường trên thu nhập (P/E)",
@@ -480,29 +569,16 @@ def _fetch_from_api(
 
     try:
         print(
-            f"📈 Fetching Fundamental.ratio("
+            f"📈 Fetching Finance.ratio("
             f"{symbol}, period='{period}')"
         )
 
-        fundamental = Fundamental()
-
         upstream_started = time.perf_counter()
 
-        df = (
-            fundamental
-            .equity(symbol)
-            .ratio(
-                period=period,
-                lang="en",
-                # Quan trọng:
-                # Không drop NaN vì có thể kỳ mới EPS/Beta
-                # chưa có nhưng kỳ trước có.
-                dropna=False,
-            )
-        )
+        df = vnstock_client.financial_ratio(symbol, period=period)
 
         print(
-            f"⏱️ vnstock_data.ratio {symbol}: "
+            f"⏱️ vnstock.ratio {symbol}: "
             f"{time.perf_counter() - upstream_started:.2f}s"
         )
 
@@ -514,7 +590,7 @@ def _fetch_from_api(
 
             return {}
 
-        # Trường hợp vnstock_data trả MultiIndex column
+        # Trường hợp nguồn trả MultiIndex column (VCI)
         if isinstance(
             df.columns,
             pd.MultiIndex,
@@ -544,6 +620,9 @@ def _fetch_from_api(
         records = _normalize_records(
             df
         )
+
+        if not records:
+            records = _normalize_period_rows(df)
 
         if not records:
             print(
@@ -629,110 +708,94 @@ def _refresh_finance(symbol, period, cache_file):
         return {}
 
 
+def _latest_close_from_cache(symbol):
+    stock_path = data_path("stocks", f"{symbol}.json")
+
+    if not stock_path.exists():
+        return None
+
+    try:
+        with open(stock_path, encoding="utf-8") as stock_file:
+            rows = json.load(stock_file)
+
+        for row in reversed(rows or []):
+            close = _safe_value(row.get("close"))
+            if isinstance(close, (int, float)) and close > 0:
+                return float(close)
+    except Exception as exc:
+        print(f"⚠️ Không đọc được giá cache {symbol}: {exc}")
+
+    return None
+
+
 def _fetch_fast_summary(symbol, period):
-    """Lấy các metric Tổng quan nhanh từ cùng Market layer với stock fetcher."""
+    """
+    Metric Tổng quan nhanh để UI hiện ngay trong lúc ratio chạy nền.
+
+    Bản free không có Market.summary, nên lấy số cổ phiếu
+    lưu hành từ hồ sơ doanh nghiệp và tính vốn hóa từ giá đóng cửa đã cache.
+    """
     symbol = symbol.strip().upper()
     _pace_upstream_request()
 
     try:
         started = time.perf_counter()
-        df = Market().equity(symbol).summary()
+        profile = vnstock_client.company_overview(symbol)
 
         print(
-            f"⏱️ vnstock_data.summary {symbol}: "
+            f"⏱️ vnstock.company_overview {symbol}: "
             f"{time.perf_counter() - started:.2f}s"
         )
 
-        if df is None or df.empty:
-            return {}
-
-        row = df.iloc[-1]
-        values = {
-            _normalize_metric_key(column): _safe_value(row.get(column))
-            for column in df.columns
-        }
-
-        aliases = {
-            "RT_VALUE_PE": (
-                "pe",
-                "p_e",
-                "ttm_pe",
-                "price_to_earning",
-                "price_to_earnings",
-            ),
-            "RT_VALUE_EPS": (
-                "eps",
-                "trailing_eps",
-                "ttm_eps",
-            ),
-            "RT_VALUE_BETA": ("beta",),
-            "RT_VALUE_MARKET_CAP": (
-                "market_cap",
-                "market_capital",
-                "market_capitalization",
-            ),
-            "RT_VALUE_OUTSTANDING_SHARES": (
-                "outstanding_share",
-                "outstanding_shares",
-                "shares_outstanding",
-            ),
-        }
-
-        names = {
-            "RT_VALUE_PE": "P/E",
-            "RT_VALUE_EPS": "EPS",
-            "RT_VALUE_BETA": "Beta",
-            "RT_VALUE_MARKET_CAP": "Market Cap",
-            "RT_VALUE_OUTSTANDING_SHARES": "Outstanding Shares",
-        }
-
         records = []
 
-        for order, (metric_id, source_aliases) in enumerate(aliases.items()):
-            source_id = next(
-                (alias for alias in source_aliases if values.get(alias) is not None),
-                None,
-            )
-
-            if source_id is None:
+        shares = None
+        for key in ("outstanding_shares", "listed_volume"):
+            value = _safe_value(profile.get(key))
+            try:
+                shares = float(value)
+            except (TypeError, ValueError):
                 continue
+            if shares > 0:
+                break
+            shares = None
 
-            value = values[source_id]
-            unit = None
-
-            # Market.summary của một số source trả vốn hóa theo tỷ VND.
-            if metric_id == "RT_VALUE_MARKET_CAP":
-                try:
-                    numeric_value = float(value)
-                    if abs(numeric_value) < 1_000_000_000:
-                        value = numeric_value * 1_000_000_000
-                except (TypeError, ValueError):
-                    pass
-                unit = "VND"
-
+        if shares:
             records.append({
-                "id": metric_id,
-                "source_id": source_id,
-                "name": names[metric_id],
+                "id": "RT_VALUE_OUTSTANDING_SHARES",
+                "source_id": "outstanding_shares",
+                "name": "Outstanding Shares",
                 "period": "latest",
-                "unit": unit,
-                "value": value,
-                "order": order,
+                "unit": None,
+                "value": shares,
+                "order": len(records),
             })
 
-        if not any(row["id"] == "RT_VALUE_BETA" for row in records):
-            beta = _calculate_beta_from_cache(symbol)
-
-            if beta is not None:
+            close = _latest_close_from_cache(symbol)
+            if close:
+                # Giá vnstock tính theo nghìn đồng.
                 records.append({
-                    "id": "RT_VALUE_BETA",
-                    "source_id": "calculated_beta_252d",
-                    "name": "Beta (252 trading days)",
+                    "id": "RT_VALUE_MARKET_CAP",
+                    "source_id": "calculated_market_cap",
+                    "name": "Market Cap",
                     "period": "latest",
-                    "unit": None,
-                    "value": beta,
+                    "unit": "VND",
+                    "value": round(close * 1000 * shares),
                     "order": len(records),
                 })
+
+        beta = _calculate_beta_from_cache(symbol)
+
+        if beta is not None:
+            records.append({
+                "id": "RT_VALUE_BETA",
+                "source_id": "calculated_beta_252d",
+                "name": "Beta (252 trading days)",
+                "period": "latest",
+                "unit": None,
+                "value": beta,
+                "order": len(records),
+            })
 
         if not records:
             return {}
@@ -866,7 +929,7 @@ def fetch_finance(
     Lấy financial ratios bằng stale-while-revalidate.
 
     Cache đúng schema được trả ngay; nếu hết TTL thì refresh chạy nền.
-    Chỉ mã chưa từng có cache mới phải đợi vnstock_data ở request đầu tiên.
+    Chỉ mã chưa từng có cache mới phải đợi vnstock ở request đầu tiên.
     """
     symbol = symbol.strip().upper()
 
