@@ -11,6 +11,8 @@ import {
   CommunityCommentEntity,
   CommunityLikeEntity,
   CommunitySaveEntity,
+  CommunityConversationEntity,
+  CommunityMessageEntity,
 } from 'src/modules/Community/community.entities';
 import { DATA_SOURCE } from 'src/shared/const';
 import { DataSource } from 'typeorm';
@@ -39,6 +41,8 @@ export const databaseProviders = [
           CommunityCommentEntity,
           CommunityLikeEntity,
           CommunitySaveEntity,
+          CommunityConversationEntity,
+          CommunityMessageEntity,
         ],
         synchronize: true,
         logging: true,

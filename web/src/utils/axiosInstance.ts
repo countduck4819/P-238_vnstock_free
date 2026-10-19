@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 
 export const API_BASE = "/api";
 
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
     if (typeof document === "undefined") return null;
     const match = document.cookie
         ?.split("; ")

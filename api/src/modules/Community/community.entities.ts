@@ -99,3 +99,49 @@ export class CommunitySaveEntity extends BaseEntities {
   @Column({ type: 'int' })
   userId: number;
 }
+
+/**
+ * One-to-one conversation between two members. The pair is stored in a
+ * canonical order (`userLowId < userHighId`) so each pair has exactly one row.
+ */
+@Entity('community_conversations')
+@Index(['userLowId', 'userHighId'], { unique: true })
+export class CommunityConversationEntity extends BaseEntities {
+  @Column({ type: 'int' })
+  @Index()
+  userLowId: number;
+
+  @Column({ type: 'int' })
+  @Index()
+  userHighId: number;
+
+  @Column({ type: 'text', nullable: true })
+  lastMessagePreview?: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  lastSenderId?: number | null;
+
+  @Column({ type: 'timestamp', precision: 6, nullable: true })
+  @Index()
+  lastMessageAt?: Date | null;
+}
+
+@Entity('community_messages')
+@Index(['conversationId', 'id'])
+export class CommunityMessageEntity extends BaseEntities {
+  @Column({ type: 'int' })
+  conversationId: number;
+
+  @Column({ type: 'int' })
+  senderId: number;
+
+  @Column({ type: 'int' })
+  @Index()
+  recipientId: number;
+
+  @Column({ type: 'text' })
+  content: string;
+
+  @Column({ type: 'timestamp', precision: 6, nullable: true })
+  readAt?: Date | null;
+}

@@ -9,6 +9,7 @@ import aiChatReducer from "@/store/ai-chat/aiChat.reducer";
 import stockPredictionReducer from "@/store/stock-prediction/stock-prediction.reducer";
 import premiumOrdersReducer from "@/store/premium-orders/premium-orders.reducer";
 import communityReducer from "@/store/community/community.reducer";
+import communityChatReducer from "@/store/community-chat/community-chat.reducer";
 import { combineReducers } from "@reduxjs/toolkit";
 
 export const rootReducer = combineReducers({
@@ -23,4 +24,5 @@ export const rootReducer = combineReducers({
     stockPrediction: stockPredictionReducer,
     premiumOrders: premiumOrdersReducer,
     community: communityReducer,
+    communityChat: communityChatReducer,
 });

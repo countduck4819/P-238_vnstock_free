@@ -1,11 +1,12 @@
 import {
+  ForbiddenException,
   Inject,
   Injectable,
   Logger,
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
-import { Repository, Like, In } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   CommunityPostEntity,
   CommunityCommentEntity,
@@ -13,19 +14,26 @@ import {
   CommunitySaveEntity,
 } from './community.entities';
 import {
-  CommunityPostRepository,
+  BaseResDataI,
   CommunityCommentRepository,
   CommunityLikeRepository,
+  CommunityPostRepository,
   CommunitySaveRepository,
   HttpStatusCode,
   ResponseCode,
-  BaseResDataI,
+  UserRole,
+  UsersRepository,
 } from 'src/shared';
+import { AuthUser } from 'src/shared/decorator/current-user.decorator';
+import { UsersEntities } from '../Users/users.entities';
 import {
-  CreateCommunityPostDto,
   CreateCommunityCommentDto,
+  CreateCommunityPostDto,
   GetCommunityPostsQueryDto,
 } from './community.dto';
+import { CommunityRealtimeService } from './community-realtime.service';
+import { ServerEvent } from './community.events';
+import { MEMBER_COLUMNS, toCommunityMember } from './community-member';
 
 const SEED_POSTS: Partial<CommunityPostEntity>[] = [
   {
@@ -76,7 +84,8 @@ const SEED_POSTS: Partial<CommunityPostEntity>[] = [
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     authorRole: 'Nhà đầu tư Cá nhân VIP',
     authorBadge: 'VIP Trader',
-    title: 'Góc nhìn TCB: Động lực tăng trưởng từ CASA và tín dụng Bất động sản',
+    title:
+      'Góc nhìn TCB: Động lực tăng trưởng từ CASA và tín dụng Bất động sản',
     content:
       'TCB duy trì tỷ lệ CASA top 1 hệ thống ngân hàng (~40%). Định giá P/B hiện tại 1.1x vẫn đang chiết khấu hấp dẫn so với trung bình 5 năm (1.4x). Dòng tiền cá nhân và tổ chức đang bắt đầu mở vị thế đón đầu kỳ công bố BCTC quý.',
     symbol: 'TCB',
@@ -91,6 +100,83 @@ const SEED_POSTS: Partial<CommunityPostEntity>[] = [
   },
 ];
 
+const SEED_COMMENTS: Record<string, Partial<CommunityCommentEntity>[]> = {
+  FPT: [
+    {
+      authorName: 'Trần Minh Quang',
+      content:
+        'Đồng quan điểm! Nhịp này FPT tích lũy rất chặt chẽ, target 160k hoàn toàn khả thi.',
+      likesCount: 12,
+    },
+    {
+      authorName: 'Lê Thảo My',
+      content:
+        'Khối ngoại vừa gom ròng hơn 150 tỷ phiên hôm qua, xu hướng cực kỳ rõ ràng.',
+      likesCount: 5,
+    },
+  ],
+  HPG: [
+    {
+      authorName: 'Nguyễn Văn Hùng',
+      content:
+        'Dung Quất 2 sắp đi vào vận hành sẽ là động lực tăng trưởng lớn cho HPG!',
+      likesCount: 8,
+    },
+  ],
+};
+
+const ok = <T>(message: string, data: T): BaseResDataI<T> => ({
+  status: HttpStatusCode.OK,
+  code: ResponseCode.SUCCESS,
+  message,
+  data,
+});
+
+function toCommentView(comment: CommunityCommentEntity) {
+  return {
+    id: String(comment.id),
+    postId: String(comment.postId),
+    userId: comment.userId,
+    authorName: comment.authorName,
+    authorAvatar: comment.authorAvatar,
+    content: comment.content,
+    likes: comment.likesCount,
+    createdAt: comment.createdAt,
+  };
+}
+
+type CommentView = ReturnType<typeof toCommentView>;
+
+function toPostView(
+  post: CommunityPostEntity,
+  comments: CommentView[],
+  viewer: { isLiked: boolean; isSaved: boolean },
+) {
+  return {
+    id: String(post.id),
+    userId: post.userId,
+    authorName: post.authorName,
+    authorAvatar: post.authorAvatar,
+    authorRole: post.authorRole,
+    authorBadge: post.authorBadge,
+    title: post.title,
+    content: post.content,
+    symbol: post.symbol,
+    stance: post.stance,
+    targetPrice: post.targetPrice,
+    stopLossPrice: post.stopLossPrice,
+    category: post.category,
+    sector: post.sector,
+    imageUrl: post.imageUrl,
+    likes: post.likesCount,
+    commentsCount: post.commentsCount,
+    viewsCount: post.viewsCount,
+    createdAt: post.createdAt,
+    comments,
+    ...viewer,
+  };
+}
+
 @Injectable()
 export class CommunityService implements OnModuleInit {
   private readonly logger = new Logger(CommunityService.name);
@@ -104,6 +190,9 @@ export class CommunityService implements OnModuleInit {
     private readonly likeRepo: Repository<CommunityLikeEntity>,
     @Inject(CommunitySaveRepository)
     private readonly saveRepo: Repository<CommunitySaveEntity>,
+    @Inject(UsersRepository)
+    private readonly usersRepo: Repository<UsersEntities>,
+    private readonly realtime: CommunityRealtimeService,
   ) {}
 
   async onModuleInit() {
@@ -112,438 +201,299 @@ export class CommunityService implements OnModuleInit {
 
   private async seedInitialPostsIfEmpty() {
     try {
-      const count = await this.postRepo.count();
-      if (count === 0) {
-        this.logger.log('Seeding initial community posts...');
-        for (const postData of SEED_POSTS) {
-          const post = this.postRepo.create(postData);
-          const saved = await this.postRepo.save(post);
+      if ((await this.postRepo.count()) > 0) return;
 
-          // Seed 1-2 comments
-          if (saved.symbol === 'FPT') {
-            await this.commentRepo.save([
-              {
-                postId: saved.id,
-                authorName: 'Trần Minh Quang',
-                content:
-                  'Đồng quan điểm! Nhịp này FPT tích lũy rất chặt chẽ, target 160k hoàn toàn khả thi.',
-                likesCount: 12,
-              },
-              {
-                postId: saved.id,
-                authorName: 'Lê Thảo My',
-                content:
-                  'Khối ngoại vừa gom ròng hơn 150 tỷ phiên hôm qua, xu hướng cực kỳ rõ ràng.',
-                likesCount: 5,
-              },
-            ]);
-          } else if (saved.symbol === 'HPG') {
-            await this.commentRepo.save({
-              postId: saved.id,
-              authorName: 'Nguyễn Văn Hùng',
-              content:
-                'Dung Quất 2 sắp đi vào vận hành sẽ là động lực tăng trưởng lớn cho HPG!',
-              likesCount: 8,
-            });
-          }
+      this.logger.log('Seeding initial community posts...');
+      for (const postData of SEED_POSTS) {
+        const saved = await this.postRepo.save(this.postRepo.create(postData));
+        const comments = SEED_COMMENTS[saved.symbol ?? ''] ?? [];
+        if (comments.length > 0) {
+          await this.commentRepo.save(
+            comments.map((comment) => ({ ...comment, postId: saved.id })),
+          );
         }
-        this.logger.log('Seeded initial community posts successfully.');
       }
+      this.logger.log('Seeded initial community posts successfully.');
     } catch (err) {
       this.logger.error('Failed to seed community posts', err);
     }
   }
 
-  async getPosts(
-    query: GetCommunityPostsQueryDto,
-    currentUserId?: number,
-  ): Promise<BaseResDataI<any>> {
-    const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 20;
-    const skip = (page - 1) * limit;
+  async getPosts(query: GetCommunityPostsQueryDto, viewerId?: number) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const empty = { posts: [], total: 0, page, limit };
 
     const qb = this.postRepo
       .createQueryBuilder('post')
       .where('post.active = :active', { active: true });
 
-    // Category filter
-    if (query.category && query.category !== 'all') {
-      if (query.category === 'saved') {
-        if (!currentUserId) {
-          return {
-            status: HttpStatusCode.OK,
-            code: ResponseCode.SUCCESS,
-            message: 'Danh sách bài viết đã lưu',
-            data: { posts: [], total: 0, page, limit },
-          };
-        }
-
-        const userSaves = await this.saveRepo.find({
-          where: { userId: currentUserId, active: true },
-          select: ['postId'],
-        });
-        const savedPostIds = userSaves.map((s) => s.postId);
-
-        if (savedPostIds.length === 0) {
-          return {
-            status: HttpStatusCode.OK,
-            code: ResponseCode.SUCCESS,
-            message: 'Danh sách bài viết đã lưu',
-            data: { posts: [], total: 0, page, limit },
-          };
-        }
-
-        qb.andWhere('post.id IN (:...savedPostIds)', { savedPostIds });
-      } else if (query.category === 'hot') {
-        qb.andWhere('(post.category = :cat OR post.likesCount >= 50)', {
-          cat: 'hot',
-        });
-      } else {
-        qb.andWhere('post.category = :category', { category: query.category });
-      }
+    if (query.category === 'saved') {
+      if (!viewerId) return ok('Danh sách bài viết đã lưu', empty);
+      qb.innerJoin(
+        CommunitySaveEntity,
+        'save',
+        'save.postId = post.id AND save.userId = :viewerId',
+        { viewerId },
+      );
+    } else if (query.category === 'hot') {
+      qb.andWhere('(post.category = :hot OR post.likesCount >= 50)', {
+        hot: 'hot',
+      });
+    } else if (query.category && query.category !== 'all') {
+      qb.andWhere('post.category = :category', { category: query.category });
     }
 
-    // Sector filter
     if (query.sector && query.sector !== 'all') {
       qb.andWhere('post.sector = :sector', { sector: query.sector });
     }
-
-    // Symbol filter
     if (query.symbol) {
       qb.andWhere('post.symbol = :symbol', {
         symbol: query.symbol.toUpperCase(),
       });
     }
-
-    // Keyword search
-    if (query.keyword && query.keyword.trim()) {
-      const kw = `%${query.keyword.trim().toLowerCase()}%`;
+    if (query.authorId) {
+      qb.andWhere('post.userId = :authorId', { authorId: query.authorId });
+    }
+    const keyword = query.keyword?.trim().toLowerCase();
+    if (keyword) {
       qb.andWhere(
         '(LOWER(post.title) LIKE :kw OR LOWER(post.content) LIKE :kw OR LOWER(post.symbol) LIKE :kw OR LOWER(post.authorName) LIKE :kw)',
-        { kw },
+        { kw: `%${keyword}%` },
       );
     }
 
-    qb.orderBy('post.createdAt', 'DESC').skip(skip).take(limit);
-
-    const [posts, total] = await qb.getManyAndCount();
+    const [posts, total] = await qb
+      .orderBy('post.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     if (posts.length === 0) {
-      return {
-        status: HttpStatusCode.OK,
-        code: ResponseCode.SUCCESS,
-        message: 'Danh sách bài viết',
-        data: { posts: [], total, page, limit },
-      };
+      return ok('Danh sách bài viết', { ...empty, total });
     }
 
     const postIds = posts.map((p) => p.id);
+    const [comments, likedIds, savedIds] = await Promise.all([
+      this.commentRepo.find({
+        where: { postId: In(postIds), active: true },
+        order: { createdAt: 'ASC' },
+      }),
+      this.viewerPostIds(this.likeRepo, postIds, viewerId),
+      this.viewerPostIds(this.saveRepo, postIds, viewerId),
+    ]);
 
-    // Get comments for all retrieved posts
-    const comments = await this.commentRepo.find({
-      where: { postId: In(postIds), active: true },
-      order: { createdAt: 'ASC' },
+    const commentsByPost = new Map<number, CommentView[]>();
+    for (const comment of comments) {
+      const list = commentsByPost.get(comment.postId) ?? [];
+      list.push(toCommentView(comment));
+      commentsByPost.set(comment.postId, list);
+    }
+
+    return ok('Danh sách bài viết thành công', {
+      posts: posts.map((post) =>
+        toPostView(post, commentsByPost.get(post.id) ?? [], {
+          isLiked: likedIds.has(post.id),
+          isSaved: savedIds.has(post.id),
+        }),
+      ),
+      total,
+      page,
+      limit,
     });
-
-    const commentsMap: Record<number, CommunityCommentEntity[]> = {};
-    for (const c of comments) {
-      if (!commentsMap[c.postId]) {
-        commentsMap[c.postId] = [];
-      }
-      commentsMap[c.postId].push(c);
-    }
-
-    // Get isLiked and isSaved if user is logged in
-    let likedSet = new Set<number>();
-    let savedSet = new Set<number>();
-
-    if (currentUserId) {
-      const [likes, saves] = await Promise.all([
-        this.likeRepo.find({
-          where: { postId: In(postIds), userId: currentUserId, active: true },
-          select: ['postId'],
-        }),
-        this.saveRepo.find({
-          where: { postId: In(postIds), userId: currentUserId, active: true },
-          select: ['postId'],
-        }),
-      ]);
-
-      likedSet = new Set(likes.map((l) => l.postId));
-      savedSet = new Set(saves.map((s) => s.postId));
-    }
-
-    const resultPosts = posts.map((p) => ({
-      id: String(p.id),
-      userId: p.userId,
-      authorName: p.authorName,
-      authorAvatar: p.authorAvatar,
-      authorRole: p.authorRole,
-      authorBadge: p.authorBadge,
-      title: p.title,
-      content: p.content,
-      symbol: p.symbol,
-      stance: p.stance,
-      targetPrice: p.targetPrice,
-      stopLossPrice: p.stopLossPrice,
-      category: p.category,
-      sector: p.sector,
-      imageUrl: p.imageUrl,
-      likes: p.likesCount,
-      commentsCount: p.commentsCount,
-      viewsCount: p.viewsCount,
-      isLiked: likedSet.has(p.id),
-      isSaved: savedSet.has(p.id),
-      createdAt: p.createdAt,
-      comments: (commentsMap[p.id] || []).map((c) => ({
-        id: String(c.id),
-        postId: String(c.postId),
-        userId: c.userId,
-        authorName: c.authorName,
-        authorAvatar: c.authorAvatar,
-        content: c.content,
-        likes: c.likesCount,
-        createdAt: c.createdAt,
-      })),
-    }));
-
-    return {
-      status: HttpStatusCode.OK,
-      code: ResponseCode.SUCCESS,
-      message: 'Danh sách bài viết thành công',
-      data: {
-        posts: resultPosts,
-        total,
-        page,
-        limit,
-      },
-    };
   }
 
-  async createPost(
-    dto: CreateCommunityPostDto,
-    currentUser?: {
-      id?: number;
-      fullName?: string;
-      username?: string;
-      avatar?: string;
-      role?: string;
-    },
-  ): Promise<BaseResDataI<any>> {
-    const authorName =
-      currentUser?.fullName ||
-      currentUser?.username ||
-      dto.authorName ||
-      'Nhà đầu tư FinSight';
-    const authorAvatar = currentUser?.avatar || dto.authorAvatar || null;
-    const authorRole =
-      currentUser?.role === 'Admin'
-        ? 'Quản trị viên FinSight'
-        : dto.authorRole || 'Hội viên FinSight';
-    const authorBadge =
-      currentUser?.role === 'Admin'
-        ? 'Chuyên gia'
-        : dto.authorBadge || 'Thành viên';
+  async createPost(dto: CreateCommunityPostDto, authUser: AuthUser) {
+    const author = toCommunityMember(await this.findMember(authUser.id));
 
-    const post = this.postRepo.create({
-      userId: currentUser?.id || dto.userId,
-      authorName,
-      authorAvatar: authorAvatar || undefined,
-      authorRole,
-      authorBadge,
-      title: dto.title,
-      content: dto.content,
-      symbol: dto.symbol ? dto.symbol.toUpperCase() : undefined,
-      stance: dto.stance || 'ANALYSIS',
-      targetPrice: dto.targetPrice,
-      stopLossPrice: dto.stopLossPrice,
-      category: dto.category || 'hot',
-      sector: dto.sector,
-      imageUrl: dto.imageUrl,
-      likesCount: 1, // Auto-like on create
-      commentsCount: 0,
-      viewsCount: 1,
-    });
+    const saved = await this.postRepo.save(
+      this.postRepo.create({
+        userId: author.id,
+        authorName: author.name,
+        authorAvatar: author.avatar ?? undefined,
+        authorRole: author.role,
+        authorBadge: author.badge,
+        title: dto.title || undefined,
+        content: dto.content,
+        symbol: dto.symbol || undefined,
+        stance: dto.stance ?? 'ANALYSIS',
+        targetPrice: dto.targetPrice,
+        stopLossPrice: dto.stopLossPrice,
+        category: dto.category ?? 'hot',
+        sector: dto.sector,
+        imageUrl: dto.imageUrl,
+        likesCount: 1, // the author likes their own post
+        commentsCount: 0,
+        viewsCount: 1,
+        createdBy: author.id,
+      }),
+    );
+    await this.likeRepo.save({ postId: saved.id, userId: author.id });
 
-    const saved = await this.postRepo.save(post);
+    // Everyone else receives the post as "not liked/saved by me".
+    this.realtime.broadcast(
+      ServerEvent.POST_CREATED,
+      toPostView(saved, [], { isLiked: false, isSaved: false }),
+    );
 
-    // Auto mark like for creator if userId is present
-    if (currentUser?.id || dto.userId) {
-      const uId = currentUser?.id || dto.userId;
-      if (uId) {
-        await this.likeRepo.save({
-          postId: saved.id,
-          userId: uId,
-        });
-      }
-    }
-
-    return {
-      status: HttpStatusCode.OK,
-      code: ResponseCode.SUCCESS,
-      message: 'Đăng bài viết thành công',
-      data: {
-        ...saved,
-        id: String(saved.id),
-        isLiked: true,
-        isSaved: false,
-        comments: [],
-      },
-    };
+    return ok(
+      'Đăng bài viết thành công',
+      toPostView(saved, [], { isLiked: true, isSaved: false }),
+    );
   }
 
-  async toggleLike(
-    postId: number,
-    userId: number,
-  ): Promise<BaseResDataI<{ isLiked: boolean; likesCount: number }>> {
-    const post = await this.postRepo.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+  async toggleLike(postId: number, userId: number) {
+    await this.findPost(postId);
 
-    const existingLike = await this.likeRepo.findOne({
-      where: { postId, userId },
-    });
-
-    let isLiked = false;
-    if (existingLike) {
-      await this.likeRepo.remove(existingLike);
-      post.likesCount = Math.max(0, post.likesCount - 1);
-      isLiked = false;
+    const existing = await this.likeRepo.findOne({ where: { postId, userId } });
+    if (existing) {
+      await this.likeRepo.remove(existing);
+      await this.postRepo
+        .createQueryBuilder()
+        .update()
+        .set({ likesCount: () => 'GREATEST("likesCount" - 1, 0)' })
+        .where('id = :postId', { postId })
+        .execute();
     } else {
       await this.likeRepo.save({ postId, userId });
-      post.likesCount += 1;
-      isLiked = true;
+      await this.postRepo.increment({ id: postId }, 'likesCount', 1);
     }
 
-    await this.postRepo.save(post);
+    const { likesCount } = await this.findPost(postId);
+    const isLiked = !existing;
 
-    return {
-      status: HttpStatusCode.OK,
-      code: ResponseCode.SUCCESS,
-      message: isLiked ? 'Đã thả tim bài viết' : 'Đã bỏ tim bài viết',
-      data: {
-        isLiked,
-        likesCount: post.likesCount,
-      },
-    };
-  }
-
-  async toggleSave(
-    postId: number,
-    userId: number,
-  ): Promise<BaseResDataI<{ isSaved: boolean }>> {
-    const post = await this.postRepo.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
-
-    const existingSave = await this.saveRepo.findOne({
-      where: { postId, userId },
+    this.realtime.broadcast(ServerEvent.POST_LIKES, {
+      postId: String(postId),
+      likesCount,
     });
 
-    let isSaved = false;
-    if (existingSave) {
-      await this.saveRepo.remove(existingSave);
-      isSaved = false;
+    return ok(isLiked ? 'Đã thả tim bài viết' : 'Đã bỏ tim bài viết', {
+      isLiked,
+      likesCount,
+    });
+  }
+
+  async toggleSave(postId: number, userId: number) {
+    await this.findPost(postId);
+
+    const existing = await this.saveRepo.findOne({ where: { postId, userId } });
+    if (existing) {
+      await this.saveRepo.remove(existing);
     } else {
       await this.saveRepo.save({ postId, userId });
-      isSaved = true;
     }
 
-    return {
-      status: HttpStatusCode.OK,
-      code: ResponseCode.SUCCESS,
-      message: isSaved
+    const isSaved = !existing;
+    return ok(
+      isSaved
         ? 'Đã lưu bài viết vào danh sách quan tâm'
         : 'Đã hủy lưu bài viết',
-      data: { isSaved },
-    };
+      { isSaved },
+    );
   }
 
   async addComment(
     postId: number,
     dto: CreateCommunityCommentDto,
-    currentUser?: {
-      id?: number;
-      fullName?: string;
-      username?: string;
-      avatar?: string;
-    },
-  ): Promise<BaseResDataI<any>> {
-    const post = await this.postRepo.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+    authUser: AuthUser,
+  ) {
+    await this.findPost(postId);
+    const author = toCommunityMember(await this.findMember(authUser.id));
 
-    const authorName =
-      currentUser?.fullName ||
-      currentUser?.username ||
-      dto.authorName ||
-      'Nhà đầu tư FinSight';
-    const authorAvatar = currentUser?.avatar || dto.authorAvatar || null;
+    const saved = await this.commentRepo.save(
+      this.commentRepo.create({
+        postId,
+        userId: author.id,
+        authorName: author.name,
+        authorAvatar: author.avatar ?? undefined,
+        content: dto.content,
+        likesCount: 0,
+        createdBy: author.id,
+      }),
+    );
+    await this.postRepo.increment({ id: postId }, 'commentsCount', 1);
 
-    const comment = this.commentRepo.create({
-      postId,
-      userId: currentUser?.id || dto.userId,
-      authorName,
-      authorAvatar: authorAvatar || undefined,
-      content: dto.content,
-      likesCount: 0,
-    });
+    const comment = toCommentView(saved);
+    this.realtime.broadcast(ServerEvent.COMMENT_CREATED, comment);
 
-    const savedComment = await this.commentRepo.save(comment);
-
-    // Increment post commentsCount
-    post.commentsCount += 1;
-    await this.postRepo.save(post);
-
-    return {
-      status: HttpStatusCode.OK,
-      code: ResponseCode.SUCCESS,
-      message: 'Đã gửi bình luận thành công',
-      data: {
-        id: String(savedComment.id),
-        postId: String(savedComment.postId),
-        userId: savedComment.userId,
-        authorName: savedComment.authorName,
-        authorAvatar: savedComment.authorAvatar,
-        content: savedComment.content,
-        likes: savedComment.likesCount,
-        createdAt: savedComment.createdAt,
-      },
-    };
+    return ok('Đã gửi bình luận thành công', comment);
   }
 
-  async deletePost(
-    postId: number,
-    currentUser?: { id?: number; role?: string },
-  ): Promise<BaseResDataI<null>> {
-    const post = await this.postRepo.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException('Bài viết không tồn tại');
-    }
+  async deleteComment(commentId: number, authUser: AuthUser) {
+    const comment = await this.commentRepo.findOne({
+      where: { id: commentId },
+    });
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+    this.assertCanModify(comment.userId, authUser, 'bình luận');
 
-    if (
-      currentUser?.role !== 'Admin' &&
-      post.userId &&
-      post.userId !== currentUser?.id
-    ) {
-      return {
-        status: HttpStatusCode.FORBIDDEN,
-        code: ResponseCode.ERROR,
-        message: 'Bạn không có quyền xóa bài viết này',
-        data: null,
-      };
-    }
+    await this.commentRepo.update(commentId, { deletedBy: authUser.id });
+    await this.commentRepo.softDelete(commentId);
+    await this.postRepo
+      .createQueryBuilder()
+      .update()
+      .set({ commentsCount: () => 'GREATEST("commentsCount" - 1, 0)' })
+      .where('id = :postId', { postId: comment.postId })
+      .execute();
 
+    this.realtime.broadcast(ServerEvent.COMMENT_DELETED, {
+      postId: String(comment.postId),
+      commentId: String(commentId),
+    });
+
+    return ok('Đã xóa bình luận', null);
+  }
+
+  async deletePost(postId: number, authUser: AuthUser) {
+    const post = await this.findPost(postId);
+    this.assertCanModify(post.userId, authUser, 'bài viết');
+
+    await this.postRepo.update(postId, { deletedBy: authUser.id });
     await this.postRepo.softDelete(postId);
 
-    return {
-      status: HttpStatusCode.OK,
-      code: ResponseCode.SUCCESS,
-      message: 'Đã xóa bài viết',
-      data: null,
-    };
+    this.realtime.broadcast(ServerEvent.POST_DELETED, {
+      postId: String(postId),
+    });
+
+    return ok('Đã xóa bài viết', null);
+  }
+
+  private async findPost(postId: number) {
+    const post = await this.postRepo.findOne({ where: { id: postId } });
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+    return post;
+  }
+
+  private async findMember(userId: number) {
+    const user = await this.usersRepo.findOne({
+      where: { id: userId },
+      select: MEMBER_COLUMNS,
+    });
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại');
+    return user;
+  }
+
+  /** Only the author or an administrator may change a post or comment. */
+  private assertCanModify(
+    ownerId: number | null | undefined,
+    authUser: AuthUser,
+    what: string,
+  ) {
+    const isOwner = ownerId != null && ownerId === authUser.id;
+    if (!isOwner && authUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException(`Bạn không có quyền xóa ${what} này`);
+    }
+  }
+
+  private async viewerPostIds(
+    repo: Repository<CommunityLikeEntity | CommunitySaveEntity>,
+    postIds: number[],
+    viewerId?: number,
+  ): Promise<Set<number>> {
+    if (!viewerId) return new Set();
+    const rows = await repo.find({
+      where: { postId: In(postIds), userId: viewerId, active: true },
+      select: ['postId'],
+    });
+    return new Set(rows.map((row) => row.postId));
   }
 }

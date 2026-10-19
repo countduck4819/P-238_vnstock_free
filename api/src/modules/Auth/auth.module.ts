@@ -45,6 +45,6 @@ import { GoogleAuthGuard } from "src/shared/guard/google-guard.guard";
     GoogleStrategy,
     GoogleAuthGuard,
   ],
-  exports: [JwtStrategyToken, JwtAuthGuardToken, AuthServiceToken],
+  exports: [JwtStrategyToken, JwtAuthGuardToken, AuthServiceToken, JwtModule],
 })
 export class AuthModule {}

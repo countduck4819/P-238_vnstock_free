@@ -12,6 +12,7 @@ import fastifyCookie from '@fastify/cookie';
 import multipart from '@fastify/multipart';
 
 import passport from 'passport';
+import { ALLOWED_ORIGINS } from './shared/const';
 // import { googleExpress } from './modules/Auth/google-express';
 
 async function bootstrap() {
@@ -57,14 +58,7 @@ async function bootstrap() {
   await app.register(multipart);
 
   await app.register(fastifyCors, {
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:8000',
-      'http://fireant.io.vn',
-      'https://fireant.io.vn',
-      'http://c4-app-238.io.vn',
-      'https://c4-app-238.io.vn',
-    ],
+    origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

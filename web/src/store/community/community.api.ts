@@ -10,15 +10,11 @@ export interface GetPostsParams {
     sector?: string;
     symbol?: string;
     keyword?: string;
-    userId?: number;
+    authorId?: number;
 }
 
+// The author is the signed-in account: the API reads it from the access token.
 export interface CreatePostPayload {
-    userId?: number;
-    authorName?: string;
-    authorAvatar?: string;
-    authorRole?: string;
-    authorBadge?: string;
     title?: string;
     content: string;
     symbol?: string;
@@ -31,12 +27,12 @@ export interface CreatePostPayload {
 }
 
 export interface CreateCommentPayload {
-    postId: string | number;
+    postId: string;
     content: string;
-    userId?: number;
-    authorName?: string;
-    authorAvatar?: string;
 }
+
+const errorMessage = (err: unknown, fallback: string) =>
+    typeof err === "string" ? err : fallback;
 
 export const fetchCommunityPosts = createAsyncThunk(
     `${prefix}/fetchPosts`,
@@ -44,10 +40,8 @@ export const fetchCommunityPosts = createAsyncThunk(
         try {
             const res = await api.get(`${prefix}/posts`, { params });
             return res.data?.data;
-        } catch (err: any) {
-            return rejectWithValue(
-                err.response?.data?.message || "Không thể tải danh sách bài viết"
-            );
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể tải danh sách bài viết"));
         }
     }
 );
@@ -58,78 +52,68 @@ export const createCommunityPost = createAsyncThunk(
         try {
             const res = await api.post(`${prefix}/posts`, body);
             return res.data?.data;
-        } catch (err: any) {
-            return rejectWithValue(
-                err.response?.data?.message || "Không thể đăng bài viết"
-            );
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể đăng bài viết"));
         }
     }
 );
 
 export const toggleLikeCommunityPost = createAsyncThunk(
     `${prefix}/toggleLike`,
-    async (
-        { postId, userId }: { postId: string | number; userId?: number },
-        { rejectWithValue }
-    ) => {
+    async (postId: string, { rejectWithValue }) => {
         try {
-            const res = await api.post(`${prefix}/posts/${postId}/like`, { userId });
-            return { postId: String(postId), ...res.data?.data };
-        } catch (err: any) {
-            return rejectWithValue(
-                err.response?.data?.message || "Không thể thả tim bài viết"
-            );
+            const res = await api.post(`${prefix}/posts/${postId}/like`, {});
+            return { postId, ...res.data?.data };
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể thả tim bài viết"));
         }
     }
 );
 
 export const toggleSaveCommunityPost = createAsyncThunk(
     `${prefix}/toggleSave`,
-    async (
-        { postId, userId }: { postId: string | number; userId?: number },
-        { rejectWithValue }
-    ) => {
+    async (postId: string, { rejectWithValue }) => {
         try {
-            const res = await api.post(`${prefix}/posts/${postId}/save`, { userId });
-            return { postId: String(postId), ...res.data?.data };
-        } catch (err: any) {
-            return rejectWithValue(
-                err.response?.data?.message || "Không thể lưu bài viết"
-            );
+            const res = await api.post(`${prefix}/posts/${postId}/save`, {});
+            return { postId, ...res.data?.data };
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể lưu bài viết"));
         }
     }
 );
 
 export const addCommunityComment = createAsyncThunk(
     `${prefix}/addComment`,
-    async (payload: CreateCommentPayload, { rejectWithValue }) => {
-        const { postId, ...rest } = payload;
+    async ({ postId, content }: CreateCommentPayload, { rejectWithValue }) => {
         try {
-            const res = await api.post(`${prefix}/posts/${postId}/comments`, rest);
-            return { postId: String(postId), comment: res.data?.data };
-        } catch (err: any) {
-            return rejectWithValue(
-                err.response?.data?.message || "Không thể gửi bình luận"
-            );
+            const res = await api.post(`${prefix}/posts/${postId}/comments`, { content });
+            return { postId, comment: res.data?.data };
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể gửi bình luận"));
+        }
+    }
+);
+
+export const deleteCommunityComment = createAsyncThunk(
+    `${prefix}/deleteComment`,
+    async ({ postId, commentId }: { postId: string; commentId: string }, { rejectWithValue }) => {
+        try {
+            await api.delete(`${prefix}/comments/${commentId}`);
+            return { postId, commentId };
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể xóa bình luận"));
         }
     }
 );
 
 export const deleteCommunityPost = createAsyncThunk(
     `${prefix}/deletePost`,
-    async (
-        payload: { postId: string | number; userId?: number; role?: string } | string | number,
-        { rejectWithValue }
-    ) => {
-        const postId = typeof payload === "object" ? payload.postId : payload;
-        const params = typeof payload === "object" ? { userId: payload.userId, role: payload.role } : {};
+    async (postId: string, { rejectWithValue }) => {
         try {
-            await api.delete(`${prefix}/posts/${postId}`, { params });
-            return String(postId);
-        } catch (err: any) {
-            return rejectWithValue(
-                err.response?.data?.message || "Không thể xóa bài viết"
-            );
+            await api.delete(`${prefix}/posts/${postId}`);
+            return postId;
+        } catch (err) {
+            return rejectWithValue(errorMessage(err, "Không thể xóa bài viết"));
         }
     }
 );

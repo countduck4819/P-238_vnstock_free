@@ -25,6 +25,8 @@ NestJS gom các nghiệp vụ authentication, users, stocks, industries, news,
 community, premium orders, upload, stock recommendations, stock prediction,
 AI Stock và hai endpoint advisory Wave H120/V6. Các module này dùng PostgreSQL
 cho dữ liệu nghiệp vụ; các module market/advisory gọi `python_data` qua HTTP.
+Module community còn mở Socket.IO tại `/api/socket.io` (namespace `/community`)
+cho bảng tin và nhắn tin realtime, xem [community.md](community.md).
 
 ## Data and model lifecycle
 

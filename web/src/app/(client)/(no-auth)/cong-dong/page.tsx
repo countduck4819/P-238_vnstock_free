@@ -12,7 +12,6 @@ import {
     TrendingDown,
     Send,
     Sparkles,
-    Filter,
     BarChart3,
     Users,
     Award,
@@ -20,17 +19,13 @@ import {
     Plus,
     Search,
     ShieldCheck,
-    Check,
     HelpCircle,
     Compass,
     Tag,
-    ChevronDown,
     ArrowUpRight,
-    Smile,
-    Image as ImageIcon,
     Target,
-    ShieldAlert,
     Trash2,
+    MessageCircle,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -44,14 +39,17 @@ import {
     toggleLikeCommunityPost,
     toggleSaveCommunityPost,
     addCommunityComment,
+    deleteCommunityComment,
     deleteCommunityPost,
 } from "@/store/community/community.api";
 import {
     optimisticToggleLike,
     optimisticToggleSave,
     CommunityPost,
-    CommentItem,
 } from "@/store/community/community.reducer";
+import { useCommunityRealtime } from "./components/CommunityRealtimeProvider";
+import MessagesButton from "./components/MessagesButton";
+import { formatRelativeTime } from "./components/formatRelativeTime";
 
 // Types
 export type RecommendationStance = "BUY" | "SELL" | "HOLD" | "ANALYSIS";
@@ -73,32 +71,18 @@ const TOP_CONTRIBUTORS = [
     { name: "Phạm Hải Đăng", role: "Tư vấn Đầu tư", badge: "Thành viên", isFollowed: false },
 ];
 
-function formatPostTime(dateStr?: string) {
-    if (!dateStr) return "Vừa xong";
-    if (dateStr.includes("trước") || dateStr.includes("Vừa xong")) return dateStr;
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
-    const diff = Math.floor((Date.now() - date.getTime()) / 60000);
-    if (diff < 1) return "Vừa xong";
-    if (diff < 60) return `${diff} phút trước`;
-    const hours = Math.floor(diff / 60);
-    if (hours < 24) return `${hours} giờ trước`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} ngày trước`;
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-}
-
 export default function CommunityPage() {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const { user, isAuthenticated } = useAuth();
-    const { stocksFullList } = useAppSelector((state) => state.stockSymbols);
-    const { posts, loading, posting, commenting } = useAppSelector((state) => state.community);
+    const { posts, loading } = useAppSelector((state) => state.community);
+    const { connected } = useCommunityRealtime();
 
     // State for posts
     const [activeTab, setActiveTab] = useState<string>("all");
     const [selectedSector, setSelectedSector] = useState<string>("all");
     const [searchKeyword, setSearchKeyword] = useState<string>("");
+    const [debouncedKeyword, setDebouncedKeyword] = useState<string>("");
 
     // State for creating a new post
     const [newPostContent, setNewPostContent] = useState<string>("");
@@ -117,17 +101,22 @@ export default function CommunityPage() {
     const [pollVote, setPollVote] = useState<"bull" | "bear" | "sideway" | null>(null);
     const [pollVotes, setPollVotes] = useState({ bull: 68, bear: 22, sideway: 10 });
 
-    // Fetch posts from backend on mount and when user changes
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedKeyword(searchKeyword.trim()), 350);
+        return () => clearTimeout(timer);
+    }, [searchKeyword]);
+
+    // Refetch when the filters change, and when the viewer changes so the
+    // "liked/saved by me" flags match the signed-in account.
     useEffect(() => {
         dispatch(
             fetchCommunityPosts({
-                userId: user?.id,
                 category: activeTab !== "all" ? activeTab : undefined,
                 sector: selectedSector !== "all" ? selectedSector : undefined,
-                keyword: searchKeyword.trim() || undefined,
+                keyword: debouncedKeyword || undefined,
             })
         );
-    }, [dispatch, user?.id, activeTab, selectedSector, searchKeyword]);
+    }, [dispatch, user?.id, activeTab, selectedSector, debouncedKeyword]);
 
     // Load poll vote from localStorage
     useEffect(() => {
@@ -162,11 +151,6 @@ export default function CommunityPage() {
         try {
             await dispatch(
                 createCommunityPost({
-                    userId: user?.id,
-                    authorName: user?.fullName || user?.username || "Nhà đầu tư",
-                    authorAvatar: user?.avatar || undefined,
-                    authorRole: user?.role === Role.Admin ? "Quản trị viên FinSight" : "Hội viên FinSight",
-                    authorBadge: user?.role === Role.Admin ? "Chuyên gia" : "Thành viên",
                     content: newPostContent.trim(),
                     symbol: symbol || undefined,
                     stance: symbol ? newPostStance : "ANALYSIS",
@@ -184,7 +168,7 @@ export default function CommunityPage() {
             setShowTargetInputs(false);
             setIsPostingOpen(false);
             toast.success("Đã đăng bài thảo luận thành công!");
-        } catch (err: any) {
+        } catch (err) {
             toast.error(typeof err === "string" ? err : "Không thể đăng bài viết");
         }
     };
@@ -198,7 +182,7 @@ export default function CommunityPage() {
         }
 
         dispatch(optimisticToggleLike({ postId }));
-        dispatch(toggleLikeCommunityPost({ postId, userId: user?.id }));
+        dispatch(toggleLikeCommunityPost(postId));
     };
 
     // Handle Toggling Bookmark on a Post
@@ -210,7 +194,7 @@ export default function CommunityPage() {
         }
 
         dispatch(optimisticToggleSave({ postId }));
-        dispatch(toggleSaveCommunityPost({ postId, userId: user?.id }))
+        dispatch(toggleSaveCommunityPost(postId))
             .unwrap()
             .then((res) => {
                 toast.info(res?.isSaved ? "Đã lưu bài viết vào danh sách quan tâm" : "Đã hủy lưu bài viết");
@@ -239,18 +223,12 @@ export default function CommunityPage() {
 
         try {
             await dispatch(
-                addCommunityComment({
-                    postId,
-                    content: commentText.trim(),
-                    userId: user?.id,
-                    authorName: user?.fullName || user?.username || "Nhà đầu tư",
-                    authorAvatar: user?.avatar || undefined,
-                })
+                addCommunityComment({ postId, content: commentText.trim() })
             ).unwrap();
 
             setCommentText("");
             toast.success("Đã gửi bình luận thành công!");
-        } catch (err: any) {
+        } catch (err) {
             toast.error(typeof err === "string" ? err : "Không thể gửi bình luận");
         }
     };
@@ -264,7 +242,7 @@ export default function CommunityPage() {
         }
 
         if (window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) {
-            dispatch(deleteCommunityPost({ postId, userId: user?.id, role: user?.role }))
+            dispatch(deleteCommunityPost(postId))
                 .unwrap()
                 .then(() => {
                     toast.success("Đã xóa bài viết thành công!");
@@ -274,6 +252,26 @@ export default function CommunityPage() {
                 });
         }
     };
+
+    const handleDeleteComment = (postId: string, commentId: string) => {
+        if (!window.confirm("Xóa bình luận này?")) return;
+        dispatch(deleteCommunityComment({ postId, commentId }))
+            .unwrap()
+            .then(() => toast.success("Đã xóa bình luận"))
+            .catch((err) => toast.error(typeof err === "string" ? err : "Không thể xóa bình luận"));
+    };
+
+    const handleMessageAuthor = (authorId: number) => {
+        if (!isAuthenticated) {
+            toast.info("Vui lòng đăng nhập để nhắn tin!");
+            router.push("/login");
+            return;
+        }
+        router.push(`/cong-dong/tin-nhan?userId=${authorId}`);
+    };
+
+    const canModify = (ownerId?: number | null) =>
+        user?.role === Role.Admin || (!!user?.id && ownerId === user.id);
 
     // Handle Market Sentiment Poll Vote
     const handleVotePoll = (type: "bull" | "bear" | "sideway") => {
@@ -343,17 +341,20 @@ export default function CommunityPage() {
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setIsPostingOpen(true);
-                            window.scrollTo({ top: 180, behavior: "smooth" });
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-md transition-all shrink-0 cursor-pointer self-start sm:self-auto"
-                    >
-                        <Plus size={16} />
-                        <span>Tạo bài thảo luận</span>
-                    </button>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                        {isAuthenticated && <MessagesButton />}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsPostingOpen(true);
+                                window.scrollTo({ top: 180, behavior: "smooth" });
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-md transition-all shrink-0 cursor-pointer"
+                        >
+                            <Plus size={16} />
+                            <span>Tạo bài thảo luận</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -637,9 +638,11 @@ export default function CommunityPage() {
                         {/* Feed Count */}
                         <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
                             <span>Hiển thị {filteredPosts.length} bài thảo luận</span>
-                            <span className="flex items-center gap-1">
-                                <Flame size={13} className="text-amber-500" />
-                                Cập nhật theo thời gian thực
+                            <span className="flex items-center gap-1.5">
+                                <span
+                                    className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`}
+                                />
+                                {connected ? "Cập nhật theo thời gian thực" : "Đang kết nối máy chủ realtime..."}
                             </span>
                         </div>
 
@@ -699,7 +702,7 @@ export default function CommunityPage() {
                                                         <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
                                                             {post.authorRole && <span>{post.authorRole}</span>}
                                                             <span>•</span>
-                                                            <span>{formatPostTime(post.createdAt)}</span>
+                                                            <span>{formatRelativeTime(post.createdAt)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -735,8 +738,19 @@ export default function CommunityPage() {
                                                         </div>
                                                     )}
 
+                                                    {post.userId && post.userId !== user?.id && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleMessageAuthor(post.userId!)}
+                                                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
+                                                            title={`Nhắn tin cho ${post.authorName}`}
+                                                        >
+                                                            <MessageCircle size={16} />
+                                                        </button>
+                                                    )}
+
                                                     {/* Delete Button (Allowed for post author or admin) */}
-                                                    {(user?.role === Role.Admin || (user?.id && post.userId === user.id)) && (
+                                                    {canModify(post.userId) && (
                                                         <button
                                                             type="button"
                                                             onClick={(e) => {
@@ -878,8 +892,18 @@ export default function CommunityPage() {
                                                                             <span className="font-bold text-slate-900 dark:text-slate-100">
                                                                                 {cmt.authorName}
                                                                             </span>
-                                                                            <span className="text-[10px] text-slate-400">
-                                                                                {formatPostTime(cmt.createdAt)}
+                                                                            <span className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                                                                {formatRelativeTime(cmt.createdAt)}
+                                                                                {canModify(cmt.userId) && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => handleDeleteComment(post.id, cmt.id)}
+                                                                                        className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                                                                                        title="Xóa bình luận"
+                                                                                    >
+                                                                                        <Trash2 size={12} />
+                                                                                    </button>
+                                                                                )}
                                                                             </span>
                                                                         </div>
                                                                         <p className="text-slate-700 dark:text-slate-300">

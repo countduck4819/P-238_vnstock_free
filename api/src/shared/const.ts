@@ -53,3 +53,25 @@ export const CommunityCommentRepository = Symbol('CommunityCommentRepository');
 export const CommunityLikeRepository = Symbol('CommunityLikeRepository');
 export const CommunitySaveRepository = Symbol('CommunitySaveRepository');
 export const CommunityServiceToken = Symbol('CommunityServiceToken');
+export const CommunityConversationRepository = Symbol(
+  'CommunityConversationRepository',
+);
+export const CommunityMessageRepository = Symbol('CommunityMessageRepository');
+export const CommunityMessagesServiceToken = Symbol(
+  'CommunityMessagesServiceToken',
+);
+
+// Browser origins allowed to call the API and open the realtime socket.
+// Extra origins can be appended with a comma-separated CORS_ORIGINS env var.
+export const ALLOWED_ORIGINS: string[] = [
+  'http://localhost:3000',
+  'http://localhost:8000',
+  'http://fireant.io.vn',
+  'https://fireant.io.vn',
+  'http://c4-app-238.io.vn',
+  'https://c4-app-238.io.vn',
+  ...(process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+];

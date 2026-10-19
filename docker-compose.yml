@@ -30,7 +30,9 @@ services:
                 condition: service_healthy
             finsight_api:
                 condition: service_started
-        command: ["sh", "-c", "if [ ! -x node_modules/.bin/nest ]; then npm ci; fi; npm run start:dev"]
+        # Reinstall whenever package-lock.json changes (the node_modules volume
+        # outlives code updates, e.g. when socket.io was added).
+        command: ["sh", "-c", "cmp -s package-lock.json node_modules/.installed-lock.json || { npm ci && cp package-lock.json node_modules/.installed-lock.json; }; npm run start:dev"]
         env_file:
             - .env
         environment:
@@ -58,7 +60,7 @@ services:
             - fireant_web_node_modules:/app/web/node_modules
         ports:
             - "3000:3000"
-        command: ["sh", "-c", "if [ ! -x node_modules/.bin/next ]; then npm ci; fi; npm run dev"]
+        command: ["sh", "-c", "cmp -s package-lock.json node_modules/.installed-lock.json || { npm ci && cp package-lock.json node_modules/.installed-lock.json; }; npm run dev"]
         depends_on:
             - api
         env_file:
