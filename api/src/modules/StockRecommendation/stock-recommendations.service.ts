@@ -14,6 +14,7 @@ import {
 } from 'src/shared';
 import { StockRecommendationResI } from 'src/shared/type/stock-recommendations';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { pythonApiUrl } from 'src/shared/common/python-api';
 
 @Injectable()
 export class StockRecommendationsService
@@ -120,14 +121,6 @@ export class StockRecommendationsService
   async autoUpdateRecommendationStatus(): Promise<void> {
     this.logger.log('🔁 Đang kiểm tra trạng thái khuyến nghị...');
 
-    const pythonApiUrl = process.env.PYTHON_API_URL?.trim().replace(/\/+$/, '');
-    if (!pythonApiUrl) {
-      this.logger.warn(
-        'Bỏ qua cập nhật khuyến nghị: PYTHON_API_URL chưa được cấu hình.',
-      );
-      return;
-    }
-
     const activeRecs = await this.recommendationRepo.find({
       where: { status: StockRecommendationStatus.ACTIVE },
       relations: ['stock'],
@@ -138,7 +131,7 @@ export class StockRecommendationsService
         const symbol = rec.stock?.code;
         if (!symbol) continue;
 
-        const res = await fetch(`${pythonApiUrl}/stock/${symbol}`);
+        const res = await fetch(pythonApiUrl(`/stock/${symbol}`));
         if (!res.ok) {
           throw new Error(`Python stock API returned HTTP ${res.status}`);
         }

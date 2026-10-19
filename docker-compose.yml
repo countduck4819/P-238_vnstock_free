@@ -68,8 +68,9 @@ services:
             - NEXT_PUBLIC_SHORT_TERM_ENABLED=true
             - NEXT_PUBLIC_LONG_TERM_ENABLED=true
             - NEXT_PUBLIC_V6_ENABLED=true
-            # Used only by the Next.js server-side /api rewrite.
+            # Used only by the Next.js server-side rewrites (/api, /python_api).
             - INTERNAL_API_BASE_URL=http://api:8000/api
+            - INTERNAL_PYTHON_API_URL=http://python_data:6060/api
 
     qdrant:
         image: qdrant/qdrant:v1.11.0
@@ -126,7 +127,9 @@ services:
             - WAVE_V6_RELEASE_PATH=/app/deploy/wave_v6_advisory/serving_release.json
             - WAVE_V6_RUN_ROOT=/app/runs/wave_v6_daily
         healthcheck:
-            test: ["CMD-SHELL", "python -c \"import urllib.request; [urllib.request.urlopen(url, timeout=5) for url in ('http://localhost:6060/api/wave-h120/latest?limit=1', 'http://localhost:6060/api/wave-v6/latest?limit=1')]\""]
+            # Chỉ kiểm tra service sống: các route wave-* trả 503 cho tới khi
+            # model_scoring sinh runs/, không được chặn api/web khởi động.
+            test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:6060/api/health', timeout=5)\""]
             interval: 30s
             timeout: 10s
             retries: 3

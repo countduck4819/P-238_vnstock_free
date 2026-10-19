@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { RefreshCw, Layers, CheckCircle2 } from "lucide-react";
+import { pythonApiUrl } from "@/utils/pythonApi";
 
 // Dữ liệu tạm cố định (0ms) khi người dùng chưa có bộ nhớ đệm cache
 const DEFAULT_STOCK_MAP: Record<string, { weight: number; change: number }> = {
@@ -254,7 +255,7 @@ export default function MarketHeatmap() {
                             try {
                                 let res = await fetch(`/api/stocks/candle/${sym}`);
                                 if (!res.ok) {
-                                    res = await fetch(`/api/python/stock/${sym}`);
+                                    res = await fetch(pythonApiUrl(`/stock/${sym}`));
                                 }
                                 if (res.ok) {
                                     const raw = await res.json();

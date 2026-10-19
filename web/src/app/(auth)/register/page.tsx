@@ -14,6 +14,7 @@ import { Gender } from "@/store/users/user.reducer";
 import { FormSelect } from "@/share/components/FormSelect";
 import { UploadFileClient } from "@/share/components/UploadFileClient";
 import { toast } from "react-toastify";
+import { API_BASE } from "@/utils/axiosInstance";
 
 const registerSchema = z
     .object({
@@ -58,7 +59,7 @@ export default function Register() {
         setErr("");
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/users`,
+                `${API_BASE}/users`,
                 {
                     method: "POST",
                     headers: {

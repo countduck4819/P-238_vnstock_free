@@ -1,4 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { pythonApiUrl } from "@/utils/pythonApi";
 
 const prefix = "/finance";
 
@@ -10,16 +11,6 @@ export const fetchFinanceIndex = createAsyncThunk(
         { rejectWithValue, signal }
     ) => {
         try {
-            const baseUrl =
-                process.env
-                    .NEXT_PUBLIC_API_BASE_URL_PYTHON;
-
-            if (!baseUrl) {
-                throw new Error(
-                    "NEXT_PUBLIC_API_BASE_URL_PYTHON chưa được cấu hình."
-                );
-            }
-
             const normalizedSymbol = symbol
                 .trim()
                 .toUpperCase();
@@ -30,11 +21,9 @@ export const fetchFinanceIndex = createAsyncThunk(
                 );
             }
 
-            const url =
-                `${baseUrl}${prefix}/` +
-                encodeURIComponent(
-                    normalizedSymbol
-                );
+            const url = pythonApiUrl(
+                `${prefix}/${encodeURIComponent(normalizedSymbol)}`
+            );
 
             const res = await fetch(url, {
                 method: "GET",

@@ -4,6 +4,7 @@ import {
 
 import { api } from "@/utils/axiosInstance";
 import { StockIndex } from "@/share/enum";
+import { pythonApiUrl } from "@/utils/pythonApi";
 
 const prefix = "/news";
 
@@ -57,7 +58,7 @@ export const fetchNewsFromJson =
 
                 for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
                     res = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL_PYTHON}${prefix}/${symbol}`,
+                        pythonApiUrl(`${prefix}/${symbol}`),
                         { signal },
                     );
 

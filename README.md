@@ -25,9 +25,10 @@ Flask/Vnstock, FinSight FastAPI và các worker Machine Learning phục vụ adv
 Luồng ứng dụng chính:
 
 ```text
-Next.js :3000  ──HTTP──>  NestJS :8000/api  ──TypeORM──>  PostgreSQL :5000
-                              │                 └──> FinSight :6071 ──> Qdrant :6333
-                              └──> Flask/Vnstock :6060
+Next.js :3000  ──/api────────>  NestJS :8000/api  ──TypeORM──>  PostgreSQL
+      │                             │                └──> FinSight :6071 ──> Qdrant :6333
+      │                             └──> Flask/Vnstock :6060/api
+      └──────────/python_api──────────> Flask/Vnstock :6060/api
 
 Daily scoring worker ── snapshot 480 phiên ──> frozen H120 inference
                      └── runs/ ──> Flask :6060 ──> NestJS ──> Next.js
@@ -76,22 +77,20 @@ python -m pip install -r requirements.txt
 python -m pip install -e ".[dev]"
 ```
 
-Data service cần thêm Flask, scheduler và hệ sinh thái Vnstock:
+Data service (`python_data/`) dùng **vnstock bản free** (>= 4.0.9, nguồn KBS/VCI),
+không còn dùng gói trả phí `vnstock_data`. Cài từ index của vnstocks.com:
 
 ```powershell
-python -m pip install flask flask-cors watchdog schedule vnstock vnai
+python -m pip install -r python_data/requirements.txt
 ```
 
-Mã hiện tại import trực tiếp module `vnstock_data`. Trước khi chạy data service,
-kiểm tra module này đã có trong đúng virtual environment:
+`python_data/requirements.txt` đã khai báo `--extra-index-url https://vnstocks.com/api/simple`.
+Mọi lời gọi vnstock đi qua `python_data/core/vnstock_client.py` (tự đổi nguồn khi
+một nguồn lỗi, cache dữ liệu tham chiếu). API key miễn phí (`VNSTOCK_API_KEY`) nâng
+giới hạn từ 20 lên 60 request/phút; để trống thì chạy chế độ khách.
 
-```powershell
-python -c "import sys, vnstock_data; print(sys.executable); print(vnstock_data.__file__)"
-```
-
-Không cài `vnstock_data` bằng `pip install vnstock_data`: hiện không có distribution
-tương ứng trên PyPI. Môi trường Vnstock đã được cấu hình của project phải cung cấp
-module này.
+Bản free không có danh sách văn bản công bố (filings) nên tab này chỉ hiện dữ liệu
+đã cache trước đó; giá, chỉ số tài chính, tin tức, ngành và danh sách mã vẫn đủ.
 
 ### Node.js
 
@@ -144,8 +143,8 @@ Các biến backend được code sử dụng:
 | `COOKIE_SECRET` | Có | `replace-with-a-long-random-secret` | Ký cookie Fastify |
 | `DOMAIN_WEB` | Có | `http://localhost:3000` | Redirect về frontend sau authentication/payment |
 | `HOST_WEB` | Có cho AI stock | `http://localhost:3000` | Tạo liên kết bài viết trả về từ AI |
-| `PYTHON_API` | Có cho AI stock | `http://localhost:6060/api` | Price, finance và news API cho AI stock |
-| `PYTHON_API_URL` | Có cho recommendation | `http://localhost:6060/api` | Market-data API cho recommendation scheduler |
+| `PYTHON_API_URL` | Có | `http://localhost:6060/api` | Địa chỉ Flask/Vnstock cho mọi module NestJS (mặc định `http://python_data:6060/api`) |
+| `PYTHON_API` | Không | `http://localhost:6060/api` | Tên cũ, chỉ dùng khi chưa đặt `PYTHON_API_URL` |
 | `GROQ_API_KEY` | Có cho AI stock | `<your-groq-key>` | Gọi mô hình Groq |
 
 Các biến tích hợp tùy chọn:
@@ -168,25 +167,23 @@ production; production cần migration riêng.
 
 ### Frontend
 
-Tạo `web/.env.local`:
+Trình duyệt luôn gọi cùng origin: `/api/*` tới NestJS và `/python_api/*` tới
+Flask. Khi chạy `next dev`/`next start`, `web/next.config.ts` rewrite hai đường dẫn
+này; trên production, nginx (`file.nginx`) proxy đúng hai đường dẫn đó. Vì vậy
+frontend không cần biến `NEXT_PUBLIC_*` nào cho địa chỉ API.
 
-```powershell
-Copy-Item web\.env.local.example web\.env.local
-```
-
-Nội dung dùng cho NestJS chạy local:
+Biến phía server của Next.js (đặt trong `web/.env.local` khi chạy ngoài Docker):
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
-NEXT_PUBLIC_API_BASE_URL_PYTHON=http://localhost:6060/api
-API_BASE_URL=http://localhost:8000/api
+INTERNAL_API_BASE_URL=http://localhost:8000/api
+INTERNAL_PYTHON_API_URL=http://localhost:6060/api
 JWT_SECRET=replace-with-the-same-jwt-secret-as-backend
 ```
 
-`NEXT_PUBLIC_API_BASE_URL` dành cho NestJS, còn
-`NEXT_PUBLIC_API_BASE_URL_PYTHON` dành cho Flask/Vnstock. `API_BASE_URL` được
-Next.js proxy sử dụng ở phía server. Tên biến phải đúng như trên; frontend không
-đọc biến `NEXT_PUBLIC_API_URL`.
+`INTERNAL_API_BASE_URL` dùng cho rewrite `/api` và middleware làm mới token;
+`INTERNAL_PYTHON_API_URL` dùng cho rewrite `/python_api`. `JWT_SECRET` phải trùng
+backend để middleware đọc được role. `NEXT_PUBLIC_API_BASE_URL_PYTHON` chỉ cần khi
+muốn trình duyệt gọi thẳng một địa chỉ Flask khác (mặc định `/python_api`).
 
 ## Chạy development bằng terminal
 
@@ -204,6 +201,11 @@ docker compose up db
 
 PostgreSQL được publish tại `localhost:5000`.
 
+Lưu ý: Compose hiện cho `api` và `finsight_api` dùng PostgreSQL qua
+`host.docker.internal:${VPS_DB_LOCAL_PORT:-5434}` (SSH tunnel tới DB trên VPS).
+Muốn dùng service `db` trong Compose, bật lại hai dòng `PGHOST=db`/`PGPORT=5432`
+đang comment trong `docker-compose.yml`.
+
 ### 2. Data service
 
 ```powershell
@@ -213,7 +215,7 @@ cd python_data
 python server.py
 ```
 
-Data API chạy tại `http://localhost:6060`. Một số endpoint:
+Data API chạy tại `http://localhost:6060` (`GET /api/health` để kiểm tra). Một số endpoint:
 
 - `GET /api/vnindex`
 - `GET /api/listing`
@@ -360,17 +362,26 @@ docker info
 docker compose config
 ```
 
-Khởi động toàn bộ:
+Khởi động toàn bộ (chỉ cần một lệnh, `python_data` tự build từ `python_data/Dockerfile`):
 
 ```powershell
+Copy-Item .env.example .env   # lần đầu, rồi điền secrets
 docker compose up --build
 ```
+
+`python_data` chạy `start.sh`: nếu `VNSTOCK_AUTO_UPGRADE=1` (mặc định) thì tự nâng
+vnstock/vnai lên bản free mới nhất, nếu có `VNSTOCK_API_KEY` thì đăng ký key, rồi
+chạy `server.py`. Cấu hình vnstock được giữ trong volume `vnstock_home`.
+Healthcheck của `python_data` chỉ kiểm tra `/api/health`, nên `api`/`web` vẫn khởi
+động khi `runs/` chưa có kết quả H120/V6 (các route `wave-*` trả 503 cho tới khi
+`model_scoring` chạy xong).
 
 Compose hiện đã thống nhất các cổng nội bộ/public: Next.js `3000`, NestJS `8000`,
 Flask `6060`, FinSight `6071`, PostgreSQL `5000:5432` và Qdrant `6333`.
 Container API dùng `host.docker.internal` và `VPS_DB_LOCAL_PORT` theo cấu hình
-Compose; frontend dùng rewrite nội bộ tới `http://api:8000/api`. Data worker cần
-credentials/provider hợp lệ trong `.env`.
+Compose; frontend dùng rewrite nội bộ tới `http://api:8000/api` và
+`http://python_data:6060/api`. Production (`docker-compose.prod.yml` + `file.nginx`)
+publish Flask ở `127.0.0.1:6060` để nginx phục vụ `/python_api/`.
 `ngrok.yml` chỉ cần khi bật service `ngrok`.
 
 ## Machine Learning và advisory

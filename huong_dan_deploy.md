@@ -183,7 +183,9 @@ docker compose build finsight_api
 docker compose up -d finsight_api api web
 ```
 
-Nếu stack có thêm `python_data`, khởi động service này theo quy trình hiện tại của dự án.
+`python_data` (Flask + vnstock bản free) nằm trong cùng compose; `api` chờ nó
+healthy rồi mới chạy. Chạy cả stack bằng `docker compose -f docker-compose.prod.yml up -d --build`.
+Flask được publish ở `127.0.0.1:6060` để nginx phục vụ `/python_api/` (xem `file.nginx`).
 
 Kiểm tra:
 

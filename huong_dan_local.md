@@ -15,7 +15,7 @@ Cài đặt:
 - Git.
 - Node.js 22.
 - Python 3.11.
-- Docker Desktop nếu cần chạy service `python_data` cũ.
+- Docker Desktop nếu chạy `python_data` (Flask + vnstock bản free) bằng Docker.
 - Tài khoản có quyền SSH vào VPS.
 
 Clone source:
@@ -107,8 +107,10 @@ QDRANT_API_KEY=<QDRANT_READ_ONLY_API_KEY>
 FINSIGHT_API_URL=http://127.0.0.1:6071
 FINSIGHT_API_TIMEOUT_MS=120000
 
-PYTHON_API=http://127.0.0.1:6060/api
 PYTHON_API_URL=http://127.0.0.1:6060/api
+
+# API key miễn phí của vnstock (60 request/phút); để trống = chế độ khách.
+VNSTOCK_API_KEY=
 
 JWT_SECRET=<LOCAL_JWT_SECRET>
 ```
@@ -120,15 +122,15 @@ Qdrant Cloud phải có collection `company_knowledge_v1` với `3432` points. K
 Next.js chạy trong thư mục `web` không tự đọc root `.env`. Tạo file `web/.env.local`:
 
 ```ini
-NEXT_PUBLIC_API_BASE_URL=/api
 INTERNAL_API_BASE_URL=http://127.0.0.1:8000/api
-API_BASE_URL=http://127.0.0.1:8000/api
-NEXT_PUBLIC_API_BASE_URL_PYTHON=http://127.0.0.1:6060/api
+INTERNAL_PYTHON_API_URL=http://127.0.0.1:6060/api
 
 JWT_SECRET=<GIỐNG_JWT_SECRET_CỦA_NESTJS>
 ```
 
-File này đã được `.gitignore` bảo vệ và không được commit.
+File này đã được `.gitignore` bảo vệ và không được commit. Trình duyệt gọi
+`/api/*` (NestJS) và `/python_api/*` (Flask) cùng origin; Next.js rewrite theo hai
+biến trên nên không cần biến `NEXT_PUBLIC_*` cho địa chỉ API.
 
 ## 6. Khởi động các service
 
@@ -184,15 +186,26 @@ Mở giao diện:
 http://localhost:3000
 ```
 
-### Service Python cũ tại port 6060
+### Data service `python_data` tại port 6060
 
-Các tính năng dự báo, tin tức hoặc dữ liệu cũ có thể cần `python_data`:
+Giá, chỉ số tài chính, tin tức, ngành và danh sách mã lấy từ `python_data`
+(vnstock bản free). Chạy bằng Docker:
 
 ```powershell
-docker compose up -d python_data
+docker compose up -d --build python_data
 ```
 
-FinSight facts và company RAG không dùng `python_data`, nhưng một số màn hình khác của hệ thống vẫn có thể phụ thuộc service này và các artifact cũ.
+hoặc chạy trực tiếp:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r python_data\requirements.txt
+cd python_data
+..\.venv\Scripts\python.exe server.py
+```
+
+Kiểm tra: `http://127.0.0.1:6060/api/health`. FinSight facts và company RAG không dùng `python_data`.
+
+Muốn chạy toàn bộ hệ thống bằng một lệnh thì dùng `docker compose up --build` ở thư mục gốc.
 
 ## 7. Kiểm tra
 

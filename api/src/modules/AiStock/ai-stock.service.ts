@@ -21,6 +21,7 @@ import { Repository } from 'typeorm';
 import { BaseServices } from 'src/modules/Base/base.services';
 import { AiStockHistoryEntity } from './entities/ai-stock-history.entity';
 import { StockEntity } from '../Stocks/stocks.entities';
+import { pythonApiUrl } from 'src/shared/common/python-api';
 
 @Injectable()
 export class AiStockService
@@ -174,7 +175,7 @@ export class AiStockService
   private async fetchPrice(symbol: string) {
     try {
       const res = await firstValueFrom(
-        this.http.get(`${process.env.PYTHON_API}/stock/${symbol}`),
+        this.http.get(pythonApiUrl(`/stock/${symbol}`)),
       );
       return res.data;
     } catch {
@@ -186,7 +187,7 @@ export class AiStockService
   private async fetchFinance(symbol: string) {
     try {
       const res = await firstValueFrom(
-        this.http.get(`${process.env.PYTHON_API}/finance/${symbol}`),
+        this.http.get(pythonApiUrl(`/finance/${symbol}`)),
       );
       return res.data;
     } catch {
@@ -198,7 +199,7 @@ export class AiStockService
   private async fetchNews(symbol: string) {
     try {
       const res = await firstValueFrom(
-        this.http.get(`${process.env.PYTHON_API}/news/${symbol}`, {
+        this.http.get(pythonApiUrl(`/news/${symbol}`), {
           params: { symbol, limit: 1, page: 1 },
         }),
       );

@@ -13,6 +13,7 @@ import Loading from "@/share/components/Loading";
 import PDFViewer from "@/share/components/PDFViewer";
 import { renderWithEmbed } from "@/lib/utils";
 import { api } from "@/utils/axiosInstance";
+import { pythonApiUrl } from "@/utils/pythonApi";
 
 export default function NewsDetailPage() {
     const { slug } = useParams();
@@ -82,7 +83,7 @@ export default function NewsDetailPage() {
             try {
                 for (let attempt = 0; attempt < 45; attempt += 1) {
                     const response = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_BASE_URL_PYTHON}/news/${symbol}`,
+                        pythonApiUrl(`/news/${symbol}`),
                         { signal: controller.signal },
                     );
 

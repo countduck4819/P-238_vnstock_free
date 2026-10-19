@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
         ).replace(/\/$/, "");
         return [
             {
-                source: "/api/python/:path*",
+                source: "/python_api/:path*",
                 destination: `${pythonApiBase}/:path*`,
             },
             {

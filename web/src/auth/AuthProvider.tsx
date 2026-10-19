@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import jwt from "jsonwebtoken";
 import { Role } from "@/share/enum";
 import { AccountType, Gender } from "@/store/users/user.reducer";
-import { api } from "@/utils/axiosInstance";
+import { api, API_BASE } from "@/utils/axiosInstance";
 import { usePathname } from "next/navigation";
 
 export interface User {
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             setLoading(true);
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`,
+                `${API_BASE}/auth/me`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     credentials: "include",

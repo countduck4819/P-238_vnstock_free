@@ -10,6 +10,7 @@ import {
     type Time,
 } from "lightweight-charts";
 import { useEffect, useRef } from "react";
+import { pythonApiUrl } from "@/utils/pythonApi";
 
 interface Candle {
     time: string;
@@ -21,8 +22,6 @@ interface Candle {
 }
 
 const HISTORY_START = "2015-01-01";
-const PYTHON_DATA_URL =
-    process.env.NEXT_PUBLIC_PYTHON_DATA_URL || "http://localhost:6060";
 
 export default function StockChart({ symbol = "VCB" }: { symbol?: string }) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -103,7 +102,7 @@ export default function StockChart({ symbol = "VCB" }: { symbol?: string }) {
             });
 
             const res = await fetch(
-                `${PYTHON_DATA_URL}/api/stock/${symbol.toUpperCase()}?${params}`,
+                pythonApiUrl(`/stock/${symbol.toUpperCase()}?${params}`),
                 { signal: abortController.signal },
             );
 

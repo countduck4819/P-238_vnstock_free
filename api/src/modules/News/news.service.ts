@@ -10,6 +10,7 @@ import {
 import { BaseServices } from '../Base/base.services';
 import { NewsEntity } from './news.entities';
 import { Repository } from 'typeorm';
+import { pythonApiUrl } from 'src/shared/common/python-api';
 
 @Injectable()
 export class NewsService
@@ -36,6 +37,12 @@ export class NewsService
         `${normalizedSymbol}_news.json`,
       );
 
+      // python_data chỉ trả metadata và ghi danh sách tin vào data/news dùng
+      // chung, nên khi chưa có file thì nhờ nó tạo cache rồi đọc lại file.
+      if (!fs.existsSync(filePath)) {
+        await this.warmPythonNewsCache(normalizedSymbol);
+      }
+
       if (fs.existsSync(filePath)) {
         const raw = fs.readFileSync(filePath, 'utf8');
         const data = JSON.parse(raw);
@@ -45,23 +52,6 @@ export class NewsService
           message: 'Đọc JSON thành công',
           data,
         };
-      }
-
-      // Live Fetch fallback from Python API
-      const pythonApiUrl = process.env.PYTHON_API_URL || 'http://python_data:6060/api';
-      try {
-        const res = await fetch(`${pythonApiUrl}/news/${normalizedSymbol}`);
-        if (res.ok) {
-          const liveData = await res.json();
-          return {
-            status: HttpStatusCode.OK,
-            code: ResponseCode.SUCCESS,
-            message: 'Lấy dữ liệu tin tức realtime thành công',
-            data: liveData,
-          };
-        }
-      } catch (fetchErr) {
-        // ignore fetch error and return not found
       }
 
       return {
@@ -77,6 +67,14 @@ export class NewsService
         message: `Lỗi lấy tin tức: ${(e as Error).message}`,
         data: null,
       };
+    }
+  }
+
+  private async warmPythonNewsCache(symbol: string): Promise<void> {
+    try {
+      await fetch(pythonApiUrl(`/news/${symbol}`));
+    } catch {
+      // python_data chưa sẵn sàng: caller trả NOT_FOUND.
     }
   }
 

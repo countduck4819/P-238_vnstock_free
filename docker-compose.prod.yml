@@ -64,6 +64,7 @@ services:
             - NEXT_PUBLIC_LONG_TERM_ENABLED=true
             - NEXT_PUBLIC_V6_ENABLED=true
             - INTERNAL_API_BASE_URL=http://api:8000/api
+            - INTERNAL_PYTHON_API_URL=http://python_data:6060/api
 
     ngrok:
         container_name: fireant_ngrok

@@ -6,7 +6,12 @@ import { Role } from "./share/enum";
 import { publicRouters } from "./share/const/const";
 
 const SECRET_KEY = process.env.JWT_SECRET || "123456789";
-const API_BASE_URL = process.env.API_BASE_URL || "";
+// Middleware chạy phía server nên gọi thẳng NestJS (giống rewrite /api).
+const API_BASE_URL = (
+    process.env.API_BASE_URL ||
+    process.env.INTERNAL_API_BASE_URL ||
+    "http://localhost:8000/api"
+).replace(/\/$/, "");
 const pathPublic: string[] = publicRouters;
 
 const rolePaths: Record<Role, string[]> = {
@@ -142,7 +147,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+    matcher: ["/((?!api|python_api|_next/static|_next/image|favicon.ico).*)"],
 };
 // export const runtime = "nodejs";
 // import { NextResponse } from "next/server";

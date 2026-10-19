@@ -11,6 +11,7 @@ import { StockEntity } from './stocks.entities';
 import { IndustryEntity } from '../Industries/industries.entities';
 import * as fs from 'fs';
 import * as path from 'path';
+import { pythonApiUrl } from 'src/shared/common/python-api';
 
 @Injectable()
 export class StockService
@@ -196,10 +197,7 @@ export class StockService
     const sym = symbol.toUpperCase().trim();
     try {
       // 1. Try python upstream if available
-      const pythonUrl = (
-        process.env.PYTHON_API_URL || 'http://python_data:6060/api'
-      ).replace(/\/+$/, '');
-      const res = await fetch(`${pythonUrl}/stock/${sym}`, {
+      const res = await fetch(pythonApiUrl(`/stock/${sym}`), {
         signal: AbortSignal.timeout(15000),
       });
       if (res.ok) {
@@ -234,10 +232,7 @@ export class StockService
 
   async getOverview() {
     try {
-      const pythonUrl = (
-        process.env.PYTHON_API_URL || 'http://python_data:6060/api'
-      ).replace(/\/+$/, '');
-      const res = await fetch(`${pythonUrl}/stocks/overview`, {
+      const res = await fetch(pythonApiUrl('/stocks/overview'), {
         signal: AbortSignal.timeout(5000),
       });
       if (res.ok) {

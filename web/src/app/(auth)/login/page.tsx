@@ -13,7 +13,7 @@ import { FormInput } from "@/share/components/FormInput";
 import { FormButton } from "@/share/components/FormButtom";
 import { FaGoogle } from "react-icons/fa";
 import { FaFacebook } from "react-icons/fa";
-import { api } from "@/utils/axiosInstance";
+import { api, API_BASE } from "@/utils/axiosInstance";
 import Link from "next/link";
 
 const loginSchema = z.object({
@@ -35,7 +35,7 @@ export default function Login() {
         setErr("");
         try {
             const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
+                `${API_BASE}/auth/login`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -116,17 +116,17 @@ export default function Login() {
 
                             <div className="flex justify-center items-center mt-5 space-x-3">
                                 {/* <SocialLoginButton
-                                    href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`}
+                                    href={`${API_BASE}/auth/google`}
                                     icon={<FaGoogle size={25} />}
                                     variant="google"
                                 /> */}
                                 <SocialLoginButton
-                                    href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`}
+                                    href={`${API_BASE}/auth/google`}
                                     icon={<FaGoogle size={25} />}
                                     variant="google"
                                 />
                                 {/* <SocialLoginButton
-                                    href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/facebook`}
+                                    href={`${API_BASE}/auth/facebook`}
                                     icon={<FaFacebook size={30} />}
                                     variant="facebook"
                                 /> */}
